@@ -97,3 +97,4 @@ C:\Users\123\source\repos\tt\tt\obj\Debug\net8.0-windows\refint\tt.dll
 C:\Users\123\source\repos\tt\tt\obj\Debug\net8.0-windows\tt.pdb
 C:\Users\123\source\repos\tt\tt\obj\Debug\net8.0-windows\tt.genruntimeconfig.cache
 C:\Users\123\source\repos\tt\tt\obj\Debug\net8.0-windows\ref\tt.dll
+C:\Users\123\source\repos\tt\tt\obj\Debug\net8.0-windows\tt.sourcelink.json

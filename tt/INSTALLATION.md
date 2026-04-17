@@ -1,42 +1,42 @@
-## Инструкция по установке и первому запуску
+## Installation and First Launch Instructions
 
-### Шаг 1: Установка зависимостей
+### Step 1: Install Dependencies
 
-Выполните следующие команды в PowerShell:
+Run the following commands in PowerShell:
 
 ```powershell
 cd "C:\Users\123\source\repos\tt\tt"
 dotnet add package BCrypt.Net-Core
 ```
 
-### Шаг 2: Подготовка PostgreSQL
+### Step 2: Prepare PostgreSQL
 
-1. Установите PostgreSQL (если еще не установлен)
-2. Создайте БД или используйте существующую
-3. Обновите строку подключения в `Data/TestingDbContext.cs`:
+1. Install PostgreSQL (if not already installed)
+2. Create a database or use an existing one
+3. Update the connection string in `Data/TestingDbContext.cs`:
 
 ```csharp
 optionsBuilder.UseNpgsql("Server=your_server;Port=5432;Database=your_db;User Id=your_user;Password=your_password;");
 ```
 
-### Шаг 3: Создание миграций
+### Step 3: Create Migrations
 
 ```powershell
 dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
 
-### Шаг 4: Запуск приложения
+### Step 4: Run Application
 
 ```powershell
 dotnet run
 ```
 
-## Структура проекта
+## Project Structure
 
 ```
 tt/
-??? Models/                    # Модели данных
+??? Models/                    # Data models
 ?   ??? User.cs
 ?   ??? Test.cs
 ?   ??? Question.cs
@@ -44,8 +44,8 @@ tt/
 ?   ??? TestAttempt.cs
 ?   ??? UserAnswer.cs
 ??? Data/
-?   ??? TestingDbContext.cs    # DbContext для EF Core
-??? Services/                  # Бизнес-логика
+?   ??? TestingDbContext.cs    # DbContext for EF Core
+??? Services/                  # Business logic
 ?   ??? IAuthenticationService.cs
 ?   ??? AuthenticationService.cs
 ?   ??? IUserService.cs
@@ -56,72 +56,72 @@ tt/
 ?   ??? QuestionService.cs
 ?   ??? ITestAttemptService.cs
 ?   ??? TestAttemptService.cs
-??? UI/                        # Формы Windows Forms
+??? UI/                        # Windows Forms forms
 ?   ??? LoginForm.cs
 ?   ??? TestSelectionForm.cs
 ?   ??? TestingForm.cs
 ?   ??? ResultsForm.cs
-??? Utils/                     # Вспомогательные классы
+??? Utils/                     # Helper classes
 ?   ??? ImageHelper.cs
 ?   ??? ScoreCalculator.cs
-??? ServiceContainer.cs        # Контейнер сервисов
-??? Program.cs                 # Точка входа
-??? tt.csproj                  # Файл проекта
+??? ServiceContainer.cs        # Service container
+??? Program.cs                 # Entry point
+??? tt.csproj                  # Project file
 ```
 
-## Ключевые особенности
+## Key Features
 
-? **Entity Framework Core Code-First** - полная типизированность и контроль над схемой БД
-? **Поддержка PostgreSQL** - использует Npgsql провайдер
-? **Две типа вопросов** - выбор одного или нескольких вариантов
-? **Система весов** - каждый вопрос имеет вес (баллы)
-? **Загрузка картинок** - поддержка изображений к вопросам
-? **Ограничение попыток** - контроль количества попыток прохождения
-? **Расчет результатов** - автоматический расчет баллов и процентов
-? **Безопасность паролей** - использует BCrypt для хеширования
+? **Entity Framework Core Code-First** - full type safety and database control
+? **PostgreSQL Support** - uses Npgsql provider
+? **Two Question Types** - single or multiple choice
+? **Weighted Questions** - each question has weight (points)
+? **Image Upload** - support for question images
+? **Attempt Limits** - control number of test attempts
+? **Automatic Scoring** - automatic score and percentage calculation
+? **Password Security** - uses BCrypt for hashing
 
-## Примеры использования
+## Usage Examples
 
-### Инициализация и вход
+### Initialization and Login
 
 ```csharp
 var services = new ServiceContainer();
 
-// Вход в систему
+// Login to system
 var user = await services.AuthenticationService.LoginAsync("username", "password");
 
 if (user != null)
 {
-    // Получить список тестов
+    // Get list of tests
     var tests = await services.TestService.GetAllPublishedTestsAsync();
     
     foreach (var test in tests)
     {
-        // Начать тест
+        // Start test
         var attempt = await services.TestAttemptService.StartTestAsync(user.Id, test.Id);
         
         if (attempt != null)
         {
-            // Получить вопросы
+            // Get questions
             var questions = await services.QuestionService.GetQuestionsByTestIdAsync(test.Id);
             
-            // Пользователь отвечает на вопросы...
+            // User answers questions...
             
-            // Завершить тест и получить результаты
+            // Complete test and get results
             var completed = await services.TestAttemptService.CompleteTestAsync(attempt.Id);
             
-            Console.WriteLine($"Результат: {completed.Score}/{completed.MaxScore}");
-            Console.WriteLine($"Процент: {completed.Percentage:F2}%");
+            Console.WriteLine($"Result: {completed.Score}/{completed.MaxScore}");
+            Console.WriteLine($"Percentage: {completed.Percentage:F2}%");
         }
     }
 }
 ```
 
-## Следующие шаги
+## Next Steps
 
-1. ?? **Реализовать UI** - доделать дизайн форм в Designer'е
-2. ?? **Установить BCrypt.Net-Core** - для безопасного хеширования паролей
-3. ??? **Создать миграции** - подготовить БД
-4. ?? **Добавить логирование** - отслеживать действия пользователей
-5. ?? **Написать unit-тесты** - покрыть сервисы тестами
-6. ? **Оптимизировать запросы** - использовать правильные indices в БД
+1. ?? **Implement UI** - complete form design in Designer
+2. ?? **Install BCrypt.Net-Core** - for secure password hashing
+3. ??? **Create Migrations** - prepare database
+4. ?? **Add Logging** - track user actions
+5. ?? **Write Unit Tests** - cover services with tests
+6. ? **Optimize Queries** - use proper indices in database

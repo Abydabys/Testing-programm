@@ -1,22 +1,22 @@
--- Примеры SQL запросов для инициализации тестовой БД PostgreSQL
+-- Examples of SQL queries for initializing test database on PostgreSQL
 
--- Вставка тестового пользователя (пароль: "password123" хеширован с SHA256)
+-- Insert test user (password: "password123" hashed with SHA256)
 INSERT INTO "Users" ("Username", "PasswordHash", "FullName", "CreatedAt", "IsActive") 
-VALUES ('student1', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'Иван Петров', NOW(), true)
+VALUES ('student1', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'Ivan Petrov', NOW(), true)
 ON CONFLICT DO NOTHING;
 
--- Вставка тестового теста
+-- Insert sample test
 INSERT INTO "Tests" ("Title", "Description", "CreatedAt", "UpdatedAt", "IsPublished", "MaxAttempts")
-VALUES ('Основы математики', 'Тест по основным математическим операциям', NOW(), NOW(), true, 3)
+VALUES ('Basic Mathematics', 'Test on basic mathematical operations', NOW(), NOW(), true, 3)
 RETURNING "Id";
 
--- Пример вставки вопросов (замените test_id на реальный ID из предыдущего запроса)
--- Вопрос 1: Выбор одного ответа
+-- Example of inserting questions (replace test_id with actual ID from previous query)
+-- Question 1: Single choice
 INSERT INTO "Questions" ("TestId", "Text", "Type", "Weight", "Order")
-VALUES (1, 'Чему равно 2 + 2?', 1, 5, 1)
+VALUES (1, 'What is 2 + 2?', 1, 5, 1)
 RETURNING "Id";
 
--- Ответы для вопроса 1
+-- Answers for question 1
 INSERT INTO "Answers" ("QuestionId", "Text", "IsCorrect", "Order")
 VALUES 
   (1, '3', false, 1),
@@ -24,12 +24,12 @@ VALUES
   (1, '5', false, 3),
   (1, '6', false, 4);
 
--- Вопрос 2: Выбор нескольких ответов
+-- Question 2: Multiple choice
 INSERT INTO "Questions" ("TestId", "Text", "Type", "Weight", "Order")
-VALUES (1, 'Какие из этих чисел четные?', 2, 10, 2)
+VALUES (1, 'Which of these numbers are even?', 2, 10, 2)
 RETURNING "Id";
 
--- Ответы для вопроса 2
+-- Answers for question 2
 INSERT INTO "Answers" ("QuestionId", "Text", "IsCorrect", "Order")
 VALUES 
   (2, '2', true, 1),
@@ -37,22 +37,22 @@ VALUES
   (2, '4', true, 3),
   (2, '5', false, 4);
 
--- Просмотр всех пользователей
+-- View all users
 SELECT * FROM "Users";
 
--- Просмотр всех тестов
+-- View all tests
 SELECT * FROM "Tests";
 
--- Просмотр всех вопросов теста
+-- View all questions of a test
 SELECT * FROM "Questions" WHERE "TestId" = 1;
 
--- Просмотр всех ответов на вопрос
+-- View all answers for a question
 SELECT * FROM "Answers" WHERE "QuestionId" = 1;
 
--- Просмотр попыток пользователя
+-- View user test attempts
 SELECT * FROM "TestAttempts" WHERE "UserId" = 1;
 
--- Просмотр ответов пользователя на тест
+-- View user answers to a test
 SELECT ta.*, ua.*, a.*, q.*
 FROM "TestAttempts" ta
 LEFT JOIN "UserAnswers" ua ON ta."Id" = ua."TestAttemptId"
@@ -60,7 +60,7 @@ LEFT JOIN "Answers" a ON ua."AnswerId" = a."Id"
 LEFT JOIN "Questions" q ON ua."QuestionId" = q."Id"
 WHERE ta."Id" = 1;
 
--- Статистика по результатам теста
+-- Statistics by test results
 SELECT 
   t."Title",
   COUNT(ta."Id") as "TotalAttempts",

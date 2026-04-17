@@ -1,115 +1,115 @@
-# Тестовая система на .NET 8
+# Testing System on .NET 8
 
-## Архитектура
+## Architecture
 
-Проект разделен на следующие слои:
+The project is divided into the following layers:
 
-### 1. Models (Модели данных)
-- `User` - пользователь системы
-- `Test` - тест
-- `Question` - вопрос теста
-- `Answer` - вариант ответа
-- `TestAttempt` - попытка прохождения теста
-- `UserAnswer` - ответ пользователя на вопрос
+### 1. Models (Data Models)
+- `User` - system users
+- `Test` - tests
+- `Question` - test questions
+- `Answer` - answer options
+- `TestAttempt` - test attempts
+- `UserAnswer` - user answers to questions
 
-### 2. Data (Доступ к данным)
-- `TestingDbContext` - Entity Framework Core контекст для работы с PostgreSQL
+### 2. Data (Data Access)
+- `TestingDbContext` - Entity Framework Core context for working with PostgreSQL
 
-### 3. Services (Бизнес-логика)
-- `IAuthenticationService` - аутентификация пользователей
-- `IUserService` - управление пользователями
-- `ITestService` - управление тестами
-- `IQuestionService` - управление вопросами
-- `ITestAttemptService` - управление попытками прохождения тестов
+### 3. Services (Business Logic)
+- `IAuthenticationService` - user authentication
+- `IUserService` - user management
+- `ITestService` - test management
+- `IQuestionService` - question management
+- `ITestAttemptService` - test attempt management
 
-### 4. UI (Пользовательский интерфейс)
-- `LoginForm` - форма входа в систему
-- `TestSelectionForm` - форма выбора теста
-- `TestingForm` - форма прохождения теста
-- `ResultsForm` - форма отображения результатов
+### 4. UI (User Interface)
+- `LoginForm` - login form
+- `TestSelectionForm` - test selection form
+- `TestingForm` - test taking form
+- `ResultsForm` - results display form
 
-### 5. Utils (Вспомогательные классы)
-- `ImageHelper` - работа с изображениями
-- `ScoreCalculator` - расчет результатов тестов
+### 5. Utils (Helper Classes)
+- `ImageHelper` - image handling
+- `ScoreCalculator` - score calculation
 
-## Типы вопросов
+## Question Types
 
-### SingleChoice (Выбор одного варианта)
-Пользователь должен выбрать ровно один правильный ответ из предложенных вариантов.
+### SingleChoice (Single Choice)
+User must select exactly one correct answer from the provided options.
 
-### MultipleChoice (Выбор нескольких вариантов)
-Пользователь может выбрать один или несколько правильных ответов.
+### MultipleChoice (Multiple Choice)
+User can select one or more correct answers.
 
-## Система оценивания
+## Scoring System
 
-- Каждый вопрос имеет вес (количество баллов)
-- Максимальный балл = сумма всех весов вопросов
-- За правильный ответ присуждается количество баллов равное весу вопроса
-- За неправильный ответ присуждается 0 баллов
-- Процент = (Набранные баллы / Максимальный балл) * 100
-- Оценка: A (90-100%), B (80-89%), C (70-79%), D (60-69%), F (<60%)
+- Each question has a weight (points)
+- Maximum score = sum of all question weights
+- For correct answer, points equal to question weight are awarded
+- For incorrect answer, 0 points are awarded
+- Percentage = (Points Scored / Maximum Score) * 100
+- Grade: A (90-100%), B (80-89%), C (70-79%), D (60-69%), F (<60%)
 
-## Ограничения попыток
+## Attempt Restrictions
 
-- Каждый тест имеет максимальное количество попыток
-- После исчерпания попыток пользователь не может проходить тест
-- Результаты всех попыток сохраняются в базе данных
+- Each test has a maximum number of attempts
+- After exhausting attempts, user cannot retake the test
+- Results of all attempts are saved to the database
 
-## Подготовка к работе
+## Preparation for Work
 
-### 1. Установка зависимостей
+### 1. Install Dependencies
 ```bash
 dotnet add package BCrypt.Net-Core
 ```
 
-### 2. Настройка строки подключения
-Отредактируйте файл `Data/TestingDbContext.cs` и установите правильную строку подключения к PostgreSQL.
+### 2. Configure Connection String
+Edit the file `Data/TestingDbContext.cs` and set the correct connection string to your PostgreSQL database.
 
-### 3. Создание базы данных
+### 3. Create Database
 
 ```bash
 dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
 
-## Использование
+## Usage
 
-### Инициализация сервисов
+### Initialize Services
 ```csharp
 var serviceContainer = new ServiceContainer();
 ```
 
-### Аутентификация
+### Authentication
 ```csharp
 var user = await serviceContainer.AuthenticationService.LoginAsync(username, password);
 if (user != null)
 {
-    // Пользователь успешно вошел
+    // User successfully logged in
 }
 ```
 
-### Получение доступных тестов
+### Get Available Tests
 ```csharp
 var tests = await serviceContainer.TestService.GetAllPublishedTestsAsync();
 ```
 
-### Начало теста
+### Start Test
 ```csharp
 var attempt = await serviceContainer.TestAttemptService.StartTestAsync(userId, testId);
 ```
 
-### Завершение теста
+### Complete Test
 ```csharp
 var completedAttempt = await serviceContainer.TestAttemptService.CompleteTestAsync(attemptId);
 ```
 
 ## TODO
 
-- [ ] Реализовать UI для всех форм
-- [ ] Добавить валидацию входных данных
-- [ ] Реализовать логирование
-- [ ] Добавить обработку ошибок
-- [ ] Реализовать асинхронность в UI
-- [ ] Добавить поддержку разных языков
-- [ ] Реализовать резервное копирование БД
-- [ ] Оптимизировать запросы к БД
+- [ ] Implement UI for all forms
+- [ ] Add input data validation
+- [ ] Implement logging
+- [ ] Add error handling
+- [ ] Implement asynchronous UI operations
+- [ ] Add multi-language support
+- [ ] Implement database backup
+- [ ] Optimize database queries

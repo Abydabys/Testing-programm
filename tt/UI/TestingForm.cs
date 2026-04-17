@@ -18,8 +18,8 @@ namespace tt.UI
 
         private void InitializeComponent()
         {
-            // TODO: Инициализация UI компонентов
-            this.Text = "Прохождение теста";
+            // TODO: Initialize UI components
+            this.Text = "Test Taking";
             this.Width = 1000;
             this.Height = 700;
             this.StartPosition = FormStartPosition.CenterScreen;
@@ -27,7 +27,7 @@ namespace tt.UI
 
         private async void TestingForm_Load(object sender, EventArgs e)
         {
-            // TODO: Загрузить вопросы теста
+            // TODO: Load test questions
             // _questions = (await _serviceContainer.QuestionService.GetQuestionsByTestIdAsync(_testAttempt.TestId)).ToList();
             // DisplayQuestion(_currentQuestionIndex);
         }
@@ -39,31 +39,31 @@ namespace tt.UI
 
             var question = _questions[index];
             
-            // TODO: Отобразить вопрос
-            // 1. Вывести текст вопроса
-            // 2. Если есть изображение, отобразить его
-            // 3. В зависимости от типа вопроса, отобразить RadioButton или CheckBox
-            // 4. Обновить индикатор прогресса
+            // TODO: Display question
+            // 1. Output question text
+            // 2. If there is an image, display it
+            // 3. Depending on question type, display RadioButton or CheckBox
+            // 4. Update progress indicator
         }
 
         private async void BtnNext_Click(object sender, EventArgs e)
         {
-            // TODO: Реализовать логику перехода к следующему вопросу
-            // 1. Сохранить ответ на текущий вопрос
-            // 2. Перейти к следующему вопросу
+            // TODO: Implement logic for moving to next question
+            // 1. Save answer to current question
+            // 2. Move to next question
         }
 
         private async void BtnPrevious_Click(object sender, EventArgs e)
         {
-            // TODO: Реализовать логику возврата к предыдущему вопросу
+            // TODO: Implement logic for moving to previous question
         }
 
         private async void BtnFinish_Click(object sender, EventArgs e)
         {
-            // TODO: Реализовать логику завершения теста
-            // 1. Завершить TestAttempt
-            // 2. Вычислить результаты
-            // 3. Отобразить результаты пользователю
+            // TODO: Implement logic for completing test
+            // 1. Complete TestAttempt
+            // 2. Calculate results
+            // 3. Display results to user
         }
     }
 }

@@ -1,6 +1,4 @@
 using tt.Models;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace tt.Services
 {
@@ -56,24 +54,17 @@ namespace tt.Services
             return dbUser != null && dbUser.IsActive;
         }
 
-        // Вспомогательные методы для хеширования пароля
+        // Helper methods for password handling (plain text comparison)
         private string HashPassword(string password)
         {
-            using (var sha256 = SHA256.Create())
-            {
-                var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(bytes);
-            }
+            // WARNING: Storing plain text passwords is insecure.
+            // This implementation stores passwords in plain text per user request.
+            return password;
         }
 
         private bool VerifyPassword(string password, string hash)
         {
-            using (var sha256 = SHA256.Create())
-            {
-                var hashedInput = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                var hashedInputStr = Convert.ToBase64String(hashedInput);
-                return hashedInputStr == hash;
-            }
+            return password == hash;
         }
     }
 }

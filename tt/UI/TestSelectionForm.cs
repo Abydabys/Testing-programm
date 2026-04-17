@@ -14,8 +14,8 @@ namespace tt.UI
 
         private void InitializeComponent()
         {
-            // TODO: Инициализация UI компонентов
-            this.Text = "Доступные тесты";
+            // TODO: Initialize UI components
+            this.Text = "Available Tests";
             this.Width = 800;
             this.Height = 600;
             this.StartPosition = FormStartPosition.CenterScreen;
@@ -23,17 +23,17 @@ namespace tt.UI
 
         private async void TestSelectionForm_Load(object sender, EventArgs e)
         {
-            // TODO: Загрузить список доступных тестов
+            // TODO: Load list of available tests
             // var tests = await _serviceContainer.TestService.GetAllPublishedTestsAsync();
-            // Отобразить в DataGridView или ListBox
+            // Display in DataGridView or ListBox
         }
 
         private async void BtnStartTest_Click(object sender, EventArgs e)
         {
-            // TODO: Реализовать логику начала теста
-            // 1. Проверить количество оставшихся попыток
-            // 2. Создать TestAttempt
-            // 3. Открыть форму тестирования
+            // TODO: Implement test start logic
+            // 1. Check remaining attempts
+            // 2. Create TestAttempt
+            // 3. Open testing form
         }
     }
 }

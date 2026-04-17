@@ -3,7 +3,7 @@ using tt.Models;
 namespace tt.Utils
 {
     /// <summary>
-    /// ¬спомогательный класс дл€ работы с вычислением результатов тестов
+    /// Helper class for calculating test results and scores
     /// </summary>
     public static class ScoreCalculator
     {

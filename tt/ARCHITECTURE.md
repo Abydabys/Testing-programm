@@ -1,6 +1,6 @@
-# Архитектура тестовой системы
+# Testing System Architecture
 
-## Диаграмма взаимодействия слоев
+## Layer Interaction Diagram
 
 ```
 ???????????????????????????????????????????
@@ -45,7 +45,7 @@
 ????????????????????????????????????????????
 ```
 
-## Диаграмма сущностей (ER диаграмма)
+## Entity Relationship Diagram (ER Diagram)
 
 ```
 ????????????
@@ -98,87 +98,87 @@
         ????????????
 ```
 
-## Поток выполнения: Прохождение теста
+## Execution Flow: Taking a Test
 
 ```
-1. Пользователь запускает приложение
+1. User launches application
    ?
-2. Открывается LoginForm
+2. LoginForm opens
    ?
-3. Пользователь вводит логин/пароль
+3. User enters login/password
    ?
-4. AuthenticationService.LoginAsync() проверяет учетные данные
+4. AuthenticationService.LoginAsync() verifies credentials
    ?
-5. Если успешно ? TestSelectionForm показывает список тестов
+5. If successful ? TestSelectionForm displays test list
    ?
-6. Пользователь выбирает тест
+6. User selects a test
    ?
-7. Проверяется: CanUserAttemptTest (количество попыток)
+7. Check: CanUserAttemptTest (number of attempts)
    ?
-8. Если можно ? TestAttemptService.StartTestAsync() создает попытку
+8. If allowed ? TestAttemptService.StartTestAsync() creates attempt
    ?
-9. Открывается TestingForm с вопросами
+9. TestingForm opens with questions
    ?
-10. Пользователь отвечает на вопросы
+10. User answers questions
     ?
-11. TestAttemptService.SubmitAnswer() сохраняет ответы
+11. TestAttemptService.SubmitAnswer() saves answers
     ?
-12. Пользователь нажимает "Завершить"
+12. User clicks "Finish"
     ?
-13. TestAttemptService.CompleteTestAsync() вычисляет результаты
+13. TestAttemptService.CompleteTestAsync() calculates results
     ?
-14. Открывается ResultsForm с результатами
+14. ResultsForm opens with results
     ?
-15. Результаты сохранены в БД
+15. Results saved to database
 ```
 
-## Система расчета оценок
+## Score Calculation System
 
 ```
-Набранные баллы вычисляются следующим образом:
+Earned points are calculated as follows:
 
-Для каждого вопроса:
-  - Получить правильные ответы из БД
-  - Получить ответы пользователя
-  - Если тип = SingleChoice:
-    * Проверить: есть ли ровно 1 ответ И он равен правильному
-    * Если да: score += вес вопроса
-  - Если тип = MultipleChoice:
-    * Проверить: количество ответов совпадает И все ответы правильные
-    * Если да: score += вес вопроса
+For each question:
+  - Get correct answers from database
+  - Get user's answers
+  - If type = SingleChoice:
+    * Check: is there exactly 1 answer AND it equals the correct one
+    * If yes: score += question weight
+  - If type = MultipleChoice:
+    * Check: number of answers matches AND all answers are correct
+    * If yes: score += question weight
 
-Итоговая оценка:
-  - Процент = (score / maxScore) * 100
-  - Грейд = по таблице процентов
+Final grade:
+  - Percentage = (score / maxScore) * 100
+  - Grade = according to percentage table
 ```
 
-## Безопасность
+## Security
 
-### Хеширование паролей
+### Password Hashing
 ```
-1. При регистрации:
-   - Пароль ? HashPassword() ? SHA256 (временно) / BCrypt (на production)
-   - Хеш сохраняется в БД
+1. During registration:
+   - Password ? HashPassword() ? SHA256 (temporary) / BCrypt (production)
+   - Hash is saved to database
 
-2. При входе:
-   - Пароль ? HashPassword() ? сравнивается с хешем в БД
-   - Если совпадает ? вход разрешен
+2. During login:
+   - Password ? HashPassword() ? compared with hash in database
+   - If matches ? login allowed
 ```
 
-### Защита данных
-- ? Пароли хешируются перед сохранением
-- ? Сессия пользователя хранится в памяти приложения
-- ? Все операции с БД через EF Core (защита от SQL injection)
-- ? Проверка прав доступа при выполнении операций
+### Data Protection
+- ? Passwords are hashed before saving
+- ? User session stored in application memory
+- ? All database operations through EF Core (SQL injection protection)
+- ? Access rights check during operations
 
-## Масштабируемость
+## Scalability
 
-### Оптимизация запросов
-- Использование `.Include()` для загрузки связанных данных
-- Использование `.Select()` для выборки только необходимых полей
-- Кэширование часто запрашиваемых данных
+### Query Optimization
+- Using `.Include()` to load related data
+- Using `.Select()` to retrieve only necessary fields
+- Caching frequently requested data
 
-### Индексы в БД
+### Database Indexes
 ```sql
 CREATE INDEX idx_user_username ON "Users"("Username");
 CREATE INDEX idx_question_test_id ON "Questions"("TestId");
@@ -187,14 +187,14 @@ CREATE INDEX idx_attempt_user_id ON "TestAttempts"("UserId");
 CREATE INDEX idx_useranswer_attempt_id ON "UserAnswers"("TestAttemptId");
 ```
 
-## Расширяемость
+## Extensibility
 
-Возможные улучшения:
+Possible improvements:
 
-1. **API слой** - создать REST API для клиент-серверного взаимодействия
-2. **Аутентификация** - JWT tokens вместо сеансов
-3. **Типы вопросов** - добавить новые типы (ввод текста, сопоставление и т.д.)
-4. **Аналитика** - расширенные статистики по результатам
-5. **Локализация** - поддержка нескольких языков
-6. **Экспорт** - выгрузка результатов в PDF, Excel
-7. **Мобильное приложение** - мобильный клиент с синхронизацией
+1. **API Layer** - create REST API for client-server interaction
+2. **Authentication** - JWT tokens instead of sessions
+3. **Question Types** - add new types (text input, matching, etc.)
+4. **Analytics** - advanced statistics on results
+5. **Localization** - multi-language support
+6. **Export** - export results to PDF, Excel
+7. **Mobile App** - mobile client with synchronization

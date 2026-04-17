@@ -1,7 +1,7 @@
 namespace tt.Utils
 {
     /// <summary>
-    /// ¬спомогательный класс дл€ работы с изображени€ми
+    /// Helper class for working with images
     /// </summary>
     public static class ImageHelper
     {

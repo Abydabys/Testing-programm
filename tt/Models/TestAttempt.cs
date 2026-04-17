@@ -7,9 +7,9 @@ namespace tt.Models
         public int TestId { get; set; }
         public DateTime StartedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
-        public int Score { get; set; }  // Количество набранных баллов
-        public int MaxScore { get; set; }  // Максимальный балл
-        public double Percentage { get; set; }  // Процент правильных ответов
+        public int Score { get; set; }  // Number of points scored
+        public int MaxScore { get; set; }  // Maximum possible score
+        public double Percentage { get; set; }  // Percentage of correct answers
         public bool IsCompleted { get; set; }
 
         // Navigation properties

@@ -14,7 +14,7 @@ namespace tt.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // Строка подключения может быть перемещена в конфиг файл или переменные окружения
+            // Connection string can be moved to config file or environment variables
             if (!optionsBuilder.IsConfigured)
             {
                 optionsBuilder.UseNpgsql("Server=localhost;Port=5432;Database=testing_db;User Id=postgres;Password=password;");
@@ -25,7 +25,7 @@ namespace tt.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Конфигурация User
+            // User configuration
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -35,7 +35,7 @@ namespace tt.Data
                 entity.HasMany(e => e.TestAttempts).WithOne(e => e.User).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Конфигурация Test
+            // Test configuration
             modelBuilder.Entity<Test>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -45,7 +45,7 @@ namespace tt.Data
                 entity.HasMany(e => e.TestAttempts).WithOne(e => e.Test).HasForeignKey(e => e.TestId).OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Конфигурация Question
+            // Question configuration
             modelBuilder.Entity<Question>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -54,7 +54,7 @@ namespace tt.Data
                 entity.HasMany(e => e.Answers).WithOne(e => e.Question).HasForeignKey(e => e.QuestionId).OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Конфигурация Answer
+            // Answer configuration
             modelBuilder.Entity<Answer>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -62,14 +62,14 @@ namespace tt.Data
                 entity.HasMany(e => e.UserAnswers).WithOne(e => e.Answer).HasForeignKey(e => e.AnswerId).OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Конфигурация TestAttempt
+            // TestAttempt configuration
             modelBuilder.Entity<TestAttempt>(entity =>
             {
                 entity.HasKey(e => e.Id);
                 entity.HasMany(e => e.UserAnswers).WithOne(e => e.TestAttempt).HasForeignKey(e => e.TestAttemptId).OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Конфигурация UserAnswer
+            // UserAnswer configuration
             modelBuilder.Entity<UserAnswer>(entity =>
             {
                 entity.HasKey(e => e.Id);

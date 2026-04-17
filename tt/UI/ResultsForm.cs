@@ -14,8 +14,8 @@ namespace tt.UI
 
         private void InitializeComponent()
         {
-            // TODO: Инициализация UI компонентов
-            this.Text = "Результаты теста";
+            // TODO: Initialize UI components
+            this.Text = "Test Results";
             this.Width = 600;
             this.Height = 500;
             this.StartPosition = FormStartPosition.CenterScreen;
@@ -28,12 +28,12 @@ namespace tt.UI
 
         private void DisplayResults()
         {
-            // TODO: Отобразить результаты
-            // 1. Общий балл и максимальный балл
-            // 2. Процент правильных ответов
-            // 3. Оценка (A, B, C, D, F)
-            // 4. Время прохождения
-            // 5. Детальный разбор ответов
+            // TODO: Display results
+            // 1. Total score and maximum score
+            // 2. Percentage of correct answers
+            // 3. Grade (A, B, C, D, F)
+            // 4. Time taken
+            // 5. Detailed review of answers
         }
 
         private void BtnClose_Click(object sender, EventArgs e)

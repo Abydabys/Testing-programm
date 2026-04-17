@@ -36,7 +36,7 @@ namespace tt.Services
                 if (test == null)
                     return null;
 
-                // Вычисляем максимальный балл
+                // Calculate maximum score
                 int maxScore = test.Questions.Sum(q => q.Weight);
 
                 var testAttempt = new TestAttempt
@@ -149,7 +149,7 @@ namespace tt.Services
                 if (testAttempt == null)
                     return null;
 
-                // Вычисляем количество правильных ответов
+                // Calculate number of correct answers
                 var userAnswersByQuestion = testAttempt.UserAnswers.GroupBy(ua => ua.Answer.QuestionId);
 
                 int score = 0;
@@ -165,7 +165,7 @@ namespace tt.Services
 
                     var userAnswerIds = questionAnswers.Select(ua => ua.AnswerId).ToList();
 
-                    // Для вопросов с одним ответом
+                    // For single choice questions
                     if (question.Type == QuestionType.SingleChoice)
                     {
                         if (userAnswerIds.Count == 1 && userAnswerIds[0] == correctAnswerIds[0])
@@ -173,7 +173,7 @@ namespace tt.Services
                             score += question.Weight;
                         }
                     }
-                    // Для вопросов с несколькими ответами
+                    // For multiple choice questions
                     else if (question.Type == QuestionType.MultipleChoice)
                     {
                         if (userAnswerIds.Count == correctAnswerIds.Count &&

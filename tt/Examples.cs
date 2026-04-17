@@ -1,31 +1,31 @@
-// Примеры использования API тестовой системы
+// Examples of using the Testing System API
 
 using tt;
 using tt.Services;
 using tt.Models;
 
 // ============================================================================
-// ПРИМЕР 1: Регистрация и вход пользователя
+// Example 1: User Registration and Login
 // ============================================================================
 
 async Task LoginExample()
 {
     var services = new ServiceContainer();
 
-    // Регистрация нового пользователя
+    // Register a new user
     bool registered = await services.AuthenticationService.RegisterAsync(
         username: "student1",
         password: "securePassword123",
-        fullName: "Иван Петров"
+        fullName: "Ivan Petrov"
     );
 
     if (!registered)
     {
-        Console.WriteLine("Ошибка регистрации - пользователь уже существует");
+        Console.WriteLine("Registration error - user already exists");
         return;
     }
 
-    // Вход в систему
+    // Login to system
     var user = await services.AuthenticationService.LoginAsync(
         username: "student1",
         password: "securePassword123"
@@ -33,38 +33,38 @@ async Task LoginExample()
 
     if (user == null)
     {
-        Console.WriteLine("Ошибка входа - неверные учетные данные");
+        Console.WriteLine("Login error - invalid credentials");
         return;
     }
 
-    Console.WriteLine($"Добро пожаловать, {user.FullName}!");
+    Console.WriteLine($"Welcome, {user.FullName}!");
 }
 
 // ============================================================================
-// ПРИМЕР 2: Создание теста с вопросами
+// Example 2: Creating a Test with Questions
 // ============================================================================
 
 async Task CreateTestExample()
 {
     var services = new ServiceContainer();
 
-    // Создание теста
+    // Create a test
     var test = new Test
     {
-        Title = "Основы математики",
-        Description = "Тест по базовым математическим операциям",
+        Title = "Basic Mathematics",
+        Description = "Test on basic mathematical operations",
         MaxAttempts = 3,
         IsPublished = false
     };
 
     await services.TestService.CreateTestAsync(test);
-    Console.WriteLine($"Тест создан с ID: {test.Id}");
+    Console.WriteLine($"Test created with ID: {test.Id}");
 
-    // Добавление первого вопроса (выбор одного ответа)
+    // Add first question (single choice)
     var question1 = new Question
     {
         TestId = test.Id,
-        Text = "Чему равно 2 + 2?",
+        Text = "What is 2 + 2?",
         Type = QuestionType.SingleChoice,
         Weight = 5,
         Order = 1
@@ -72,7 +72,7 @@ async Task CreateTestExample()
 
     await services.QuestionService.CreateQuestionAsync(question1);
 
-    // Добавление ответов к первому вопросу
+    // Add answers to first question
     var answers1 = new List<Answer>
     {
         new Answer { QuestionId = question1.Id, Text = "3", IsCorrect = false, Order = 1 },
@@ -83,15 +83,15 @@ async Task CreateTestExample()
 
     foreach (var answer in answers1)
     {
-        // В реальной реализации нужно создать сервис для добавления ответов
+        // In a real implementation, you need to create a service to add answers
         // await services.QuestionService.AddAnswerAsync(answer);
     }
 
-    // Добавление второго вопроса (выбор нескольких ответов)
+    // Add second question (multiple choice)
     var question2 = new Question
     {
         TestId = test.Id,
-        Text = "Какие из этих чисел четные?",
+        Text = "Which of these numbers are even?",
         Type = QuestionType.MultipleChoice,
         Weight = 10,
         Order = 2
@@ -99,66 +99,66 @@ async Task CreateTestExample()
 
     await services.QuestionService.CreateQuestionAsync(question2);
 
-    // Публикация теста
+    // Publish the test
     await services.TestService.PublishTestAsync(test.Id);
-    Console.WriteLine("Тест опубликован!");
+    Console.WriteLine("Test published!");
 }
 
 // ============================================================================
-// ПРИМЕР 3: Прохождение теста пользователем
+// Example 3: User Takes a Test
 // ============================================================================
 
 async Task TakeTestExample()
 {
     var services = new ServiceContainer();
-    var userId = 1;  // ID вошедшего пользователя
-    var testId = 1;  // ID теста
+    var userId = 1;  // ID of logged-in user
+    var testId = 1;  // ID of test
 
-    // Проверка возможности попытки
+    // Check if user can attempt the test
     bool canAttempt = await services.TestAttemptService.CanUserAttemptTestAsync(userId, testId);
 
     if (!canAttempt)
     {
-        Console.WriteLine("Вы исчерпали количество попыток для этого теста");
+        Console.WriteLine("You have exhausted the number of attempts for this test");
         return;
     }
 
-    // Начало теста
+    // Start the test
     var attempt = await services.TestAttemptService.StartTestAsync(userId, testId);
 
     if (attempt == null)
     {
-        Console.WriteLine("Ошибка при начале теста");
+        Console.WriteLine("Error starting test");
         return;
     }
 
-    Console.WriteLine($"Тест начат. Попытка #{attempt.Id}");
+    Console.WriteLine($"Test started. Attempt #{attempt.Id}");
 
-    // Получение вопросов теста
+    // Get test questions
     var questions = (await services.QuestionService.GetQuestionsByTestIdAsync(testId)).ToList();
 
-    // Имитация ответов пользователя
-    // Вопрос 1: SingleChoice - выбираем ответ с ID 5 (правильный)
+    // Simulate user answers
+    // Question 1: SingleChoice - select answer with ID 5 (correct)
     await services.TestAttemptService.SubmitAnswerAsync(attempt.Id, questions[0].Id, 5);
 
-    // Вопрос 2: MultipleChoice - выбираем ответы с ID 7 и 9 (правильные)
+    // Question 2: MultipleChoice - select answers with ID 7 and 9 (correct)
     await services.TestAttemptService.SubmitMultipleAnswersAsync(
         attempt.Id,
         questions[1].Id,
         new List<int> { 7, 9 }
     );
 
-    // Завершение теста и расчет результатов
+    // Complete test and calculate results
     var completedAttempt = await services.TestAttemptService.CompleteTestAsync(attempt.Id);
 
-    Console.WriteLine($"Тест завершен!");
-    Console.WriteLine($"Набрано баллов: {completedAttempt.Score}/{completedAttempt.MaxScore}");
-    Console.WriteLine($"Процент: {completedAttempt.Percentage:F2}%");
-    Console.WriteLine($"Оценка: {GetGrade(completedAttempt.Percentage)}");
+    Console.WriteLine($"Test completed!");
+    Console.WriteLine($"Points earned: {completedAttempt.Score}/{completedAttempt.MaxScore}");
+    Console.WriteLine($"Percentage: {completedAttempt.Percentage:F2}%");
+    Console.WriteLine($"Grade: {GetGrade(completedAttempt.Percentage)}");
 }
 
 // ============================================================================
-// ПРИМЕР 4: Просмотр результатов
+// Example 4: View Test Results
 // ============================================================================
 
 async Task ViewResultsExample()
@@ -166,22 +166,22 @@ async Task ViewResultsExample()
     var services = new ServiceContainer();
     var userId = 1;
 
-    // Получение всех попыток пользователя
+    // Get all user test attempts
     var attempts = (await services.TestAttemptService.GetUserTestAttemptsAsync(userId)).ToList();
 
-    Console.WriteLine($"Результаты прохождения тестов:");
+    Console.WriteLine($"Test completion results:");
     Console.WriteLine(new string('?', 80));
 
     foreach (var attempt in attempts)
     {
-        Console.WriteLine($"Тест: {attempt.Test.Title}");
-        Console.WriteLine($"Дата: {attempt.StartedAt:dd.MM.yyyy HH:mm}");
-        Console.WriteLine($"Статус: {(attempt.IsCompleted ? "Завершен" : "В процессе")}");
+        Console.WriteLine($"Test: {attempt.Test.Title}");
+        Console.WriteLine($"Date: {attempt.StartedAt:dd.MM.yyyy HH:mm}");
+        Console.WriteLine($"Status: {(attempt.IsCompleted ? "Completed" : "In Progress")}");
 
         if (attempt.IsCompleted)
         {
-            Console.WriteLine($"Результат: {attempt.Score}/{attempt.MaxScore} ({attempt.Percentage:F2}%)");
-            Console.WriteLine($"Оценка: {GetGrade(attempt.Percentage)}");
+            Console.WriteLine($"Result: {attempt.Score}/{attempt.MaxScore} ({attempt.Percentage:F2}%)");
+            Console.WriteLine($"Grade: {GetGrade(attempt.Percentage)}");
         }
 
         Console.WriteLine(new string('?', 80));
@@ -189,7 +189,7 @@ async Task ViewResultsExample()
 }
 
 // ============================================================================
-// ПРИМЕР 5: Загрузка картинки к вопросу
+// Example 5: Upload Image to Question
 // ============================================================================
 
 async Task UploadQuestionImageExample()
@@ -197,11 +197,11 @@ async Task UploadQuestionImageExample()
     var services = new ServiceContainer();
     var questionId = 1;
 
-    // Чтение картинки с диска
+    // Read image from disk
     byte[] imageData = File.ReadAllBytes("path/to/image.png");
     string mimeType = "image/png";
 
-    // Загрузка картинки
+    // Upload image
     bool success = await services.QuestionService.UploadQuestionImageAsync(
         questionId,
         imageData,
@@ -210,12 +210,12 @@ async Task UploadQuestionImageExample()
 
     if (success)
     {
-        Console.WriteLine("Картинка загружена успешно");
+        Console.WriteLine("Image uploaded successfully");
     }
 }
 
 // ============================================================================
-// ПРИМЕР 6: Статистика по тестам
+// Example 6: Test Statistics
 // ============================================================================
 
 async Task TestStatisticsExample()
@@ -223,14 +223,14 @@ async Task TestStatisticsExample()
     var services = new ServiceContainer();
     var testId = 1;
 
-    // Получение всех попыток по тесту
+    // Get all test attempts
     var attempts = (await services.TestAttemptService.GetTestAttemptsForTestAsync(testId))
         .Where(a => a.IsCompleted)
         .ToList();
 
     if (attempts.Count == 0)
     {
-        Console.WriteLine("Нет завершенных попыток для этого теста");
+        Console.WriteLine("No completed attempts for this test");
         return;
     }
 
@@ -239,43 +239,43 @@ async Task TestStatisticsExample()
     var maxScore = attempts.Max(a => a.Score);
     var minScore = attempts.Min(a => a.Score);
 
-    Console.WriteLine($"Статистика по тесту:");
-    Console.WriteLine($"Всего попыток: {attempts.Count}");
-    Console.WriteLine($"Средний балл: {avgScore:F2}");
-    Console.WriteLine($"Средний процент: {avgPercentage:F2}%");
-    Console.WriteLine($"Максимальный балл: {maxScore}");
-    Console.WriteLine($"Минимальный балл: {minScore}");
+    Console.WriteLine($"Test statistics:");
+    Console.WriteLine($"Total attempts: {attempts.Count}");
+    Console.WriteLine($"Average score: {avgScore:F2}");
+    Console.WriteLine($"Average percentage: {avgPercentage:F2}%");
+    Console.WriteLine($"Maximum score: {maxScore}");
+    Console.WriteLine($"Minimum score: {minScore}");
 }
 
 // ============================================================================
-// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// HELPER FUNCTIONS
 // ============================================================================
 
 string GetGrade(double percentage)
 {
     return percentage switch
     {
-        >= 90 => "A (Отлично)",
-        >= 80 => "B (Хорошо)",
-        >= 70 => "C (Удовлетворительно)",
-        >= 60 => "D (Слабо)",
-        _ => "F (Неудовлетворительно)"
+        >= 90 => "A (Excellent)",
+        >= 80 => "B (Good)",
+        >= 70 => "C (Satisfactory)",
+        >= 60 => "D (Weak)",
+        _ => "F (Unsatisfactory)"
     };
 }
 
 // ============================================================================
-// ГЛАВНЫЙ МЕТОД - ЗАПУСК ПРИМЕРОВ
+// MAIN METHOD - RUN EXAMPLES
 // ============================================================================
 
 async Task Main()
 {
     Console.WriteLine("??????????????????????????????????????????????????????");
-    Console.WriteLine("?      Примеры использования тестовой системы      ?");
+    Console.WriteLine("?      Examples of Using the Testing System       ?");
     Console.WriteLine("??????????????????????????????????????????????????????\n");
 
     try
     {
-        // Раскомментируйте нужный пример:
+        // Uncomment the needed example:
 
         // await LoginExample();
         // await CreateTestExample();
@@ -284,11 +284,11 @@ async Task Main()
         // await UploadQuestionImageExample();
         // await TestStatisticsExample();
 
-        Console.WriteLine("\nЗапустите нужный пример, раскомментировав одну из строк в методе Main()");
+        Console.WriteLine("\nRun the needed example by uncommenting one of the lines in the Main() method");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Ошибка: {ex.Message}");
+        Console.WriteLine($"Error: {ex.Message}");
         Console.WriteLine($"StackTrace: {ex.StackTrace}");
     }
 }
