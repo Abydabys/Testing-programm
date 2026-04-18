@@ -15,56 +15,45 @@ namespace tt.Services
 
         public AuthenticationService(IUserService userService)
         {
-            _userService = userService;
+            // TODO: Store the userService parameter in the _userService field.
         }
 
         public async Task<User> LoginAsync(string username, string password)
         {
-            var user = await _userService.GetUserByUsernameAsync(username);
-            if (user == null || !VerifyPassword(password, user.PasswordHash))
-                return null;
-
-            return user;
+            // TODO: Call _userService.GetUserByUsernameAsync(username) and store the result in a variable.
+            // TODO: If the user is null OR the password does not match the stored hash (use VerifyPassword), return null.
+            // TODO: If the credentials are valid, return the user object.
+            throw new NotImplementedException();
         }
 
         public async Task<bool> RegisterAsync(string username, string password, string fullName)
         {
-            var existingUser = await _userService.GetUserByUsernameAsync(username);
-            if (existingUser != null)
-                return false;
-
-            var user = new User
-            {
-                Username = username,
-                PasswordHash = HashPassword(password),
-                FullName = fullName,
-                CreatedAt = DateTime.UtcNow,
-                IsActive = true
-            };
-
-            return await _userService.CreateUserAsync(user);
+            // TODO: Call _userService.GetUserByUsernameAsync(username) to check if the username is already taken.
+            // TODO: If an existing user was found, return false immediately.
+            // TODO: Create a new User object and set its Username, PasswordHash (use HashPassword), FullName, CreatedAt (DateTime.UtcNow), and IsActive (true).
+            // TODO: Call _userService.CreateUserAsync(user) and return its result.
+            throw new NotImplementedException();
         }
 
         public async Task<bool> ValidateUserAsync(User user)
         {
-            if (user == null)
-                return false;
-
-            var dbUser = await _userService.GetUserByIdAsync(user.Id);
-            return dbUser != null && dbUser.IsActive;
+            // TODO: If the user parameter is null, return false.
+            // TODO: Call _userService.GetUserByIdAsync(user.Id) and store the result.
+            // TODO: Return true only if the result is not null AND the returned user's IsActive is true.
+            throw new NotImplementedException();
         }
 
-        // Helper methods for password handling (plain text comparison)
         private string HashPassword(string password)
         {
-            // WARNING: Storing plain text passwords is insecure.
-            // This implementation stores passwords in plain text per user request.
-            return password;
+            // TODO: Return the password as-is (plain text storage).
+            // NOTE: Storing plain text passwords is insecure. This is intentional per project requirements.
+            throw new NotImplementedException();
         }
 
         private bool VerifyPassword(string password, string hash)
         {
-            return password == hash;
+            // TODO: Return true if the password string equals the hash string (plain text comparison).
+            throw new NotImplementedException();
         }
     }
 }

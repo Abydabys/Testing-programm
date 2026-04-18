@@ -14,66 +14,47 @@ namespace tt.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // Connection string can be moved to config file or environment variables
-            if (!optionsBuilder.IsConfigured)
-            {
-                optionsBuilder.UseNpgsql("Server=localhost;Port=5432;Database=testing_db;User Id=postgres;Password=password;");
-            }
+            // TODO: Check if the optionsBuilder is already configured using optionsBuilder.IsConfigured.
+            // TODO: If not configured, call optionsBuilder.UseNpgsql(...) with the connection string.
+            // TODO: The connection string should include Server, Port, Database, User Id, and Password fields.
+            // TODO: Consider moving the connection string to a config file or environment variable instead of hardcoding it here.
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
+            // TODO: Call base.OnModelCreating(modelBuilder) first.
 
-            // User configuration
-            modelBuilder.Entity<User>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Username).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.PasswordHash).IsRequired();
-                entity.Property(e => e.FullName).HasMaxLength(200);
-                entity.HasMany(e => e.TestAttempts).WithOne(e => e.User).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
-            });
+            // TODO: Configure the User entity:
+            //   - Set Id as the primary key.
+            //   - Make Username required with a max length of 100.
+            //   - Make PasswordHash required.
+            //   - Set FullName max length to 200.
+            //   - Define a one-to-many relationship: User has many TestAttempts, foreign key is UserId, cascade delete.
 
-            // Test configuration
-            modelBuilder.Entity<Test>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Title).IsRequired().HasMaxLength(500);
-                entity.Property(e => e.Description).HasMaxLength(2000);
-                entity.HasMany(e => e.Questions).WithOne(e => e.Test).HasForeignKey(e => e.TestId).OnDelete(DeleteBehavior.Cascade);
-                entity.HasMany(e => e.TestAttempts).WithOne(e => e.Test).HasForeignKey(e => e.TestId).OnDelete(DeleteBehavior.Cascade);
-            });
+            // TODO: Configure the Test entity:
+            //   - Set Id as the primary key.
+            //   - Make Title required with a max length of 500.
+            //   - Set Description max length to 2000.
+            //   - Define a one-to-many relationship: Test has many Questions, foreign key is TestId, cascade delete.
+            //   - Define a one-to-many relationship: Test has many TestAttempts, foreign key is TestId, cascade delete.
 
-            // Question configuration
-            modelBuilder.Entity<Question>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Text).IsRequired();
-                entity.Property(e => e.Type).IsRequired();
-                entity.HasMany(e => e.Answers).WithOne(e => e.Question).HasForeignKey(e => e.QuestionId).OnDelete(DeleteBehavior.Cascade);
-            });
+            // TODO: Configure the Question entity:
+            //   - Set Id as the primary key.
+            //   - Make Text required.
+            //   - Make Type required.
+            //   - Define a one-to-many relationship: Question has many Answers, foreign key is QuestionId, cascade delete.
 
-            // Answer configuration
-            modelBuilder.Entity<Answer>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Text).IsRequired();
-                entity.HasMany(e => e.UserAnswers).WithOne(e => e.Answer).HasForeignKey(e => e.AnswerId).OnDelete(DeleteBehavior.Cascade);
-            });
+            // TODO: Configure the Answer entity:
+            //   - Set Id as the primary key.
+            //   - Make Text required.
+            //   - Define a one-to-many relationship: Answer has many UserAnswers, foreign key is AnswerId, cascade delete.
 
-            // TestAttempt configuration
-            modelBuilder.Entity<TestAttempt>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.HasMany(e => e.UserAnswers).WithOne(e => e.TestAttempt).HasForeignKey(e => e.TestAttemptId).OnDelete(DeleteBehavior.Cascade);
-            });
+            // TODO: Configure the TestAttempt entity:
+            //   - Set Id as the primary key.
+            //   - Define a one-to-many relationship: TestAttempt has many UserAnswers, foreign key is TestAttemptId, cascade delete.
 
-            // UserAnswer configuration
-            modelBuilder.Entity<UserAnswer>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-            });
+            // TODO: Configure the UserAnswer entity:
+            //   - Set Id as the primary key.
         }
     }
 }

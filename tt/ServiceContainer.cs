@@ -7,7 +7,7 @@ namespace tt
     public class ServiceContainer
     {
         private readonly TestingDbContext _dbContext;
-        
+
         public IUserService UserService { get; }
         public IAuthenticationService AuthenticationService { get; }
         public ITestService TestService { get; }
@@ -16,13 +16,12 @@ namespace tt
 
         public ServiceContainer()
         {
-            _dbContext = new TestingDbContext();
-
-            UserService = new UserService(_dbContext);
-            TestService = new TestService(_dbContext);
-            QuestionService = new QuestionService(_dbContext);
-            TestAttemptService = new TestAttemptService(_dbContext);
-            AuthenticationService = new AuthenticationService(UserService);
+            // TODO: Create a new TestingDbContext instance and store it in _dbContext.
+            // TODO: Create a new UserService, passing _dbContext, and assign it to UserService.
+            // TODO: Create a new TestService, passing _dbContext, and assign it to TestService.
+            // TODO: Create a new QuestionService, passing _dbContext, and assign it to QuestionService.
+            // TODO: Create a new TestAttemptService, passing _dbContext, and assign it to TestAttemptService.
+            // TODO: Create a new AuthenticationService, passing UserService, and assign it to AuthenticationService.
         }
     }
 }

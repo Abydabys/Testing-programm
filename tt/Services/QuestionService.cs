@@ -20,88 +20,68 @@ namespace tt.Services
 
         public QuestionService(TestingDbContext dbContext)
         {
-            _dbContext = dbContext;
+            // TODO: Store the dbContext parameter in the _dbContext field.
         }
 
         public async Task<Question> GetQuestionByIdAsync(int id)
         {
-            return await _dbContext.Questions
-                .Include(q => q.Answers)
-                .FirstOrDefaultAsync(q => q.Id == id);
+            // TODO: Query _dbContext.Questions and include its Answers navigation property.
+            // TODO: Return the first question where Id matches the given id, or null if not found.
+            throw new NotImplementedException();
         }
 
         public async Task<IEnumerable<Question>> GetQuestionsByTestIdAsync(int testId)
         {
-            return await _dbContext.Questions
-                .Where(q => q.TestId == testId)
-                .Include(q => q.Answers)
-                .OrderBy(q => q.Order)
-                .ToListAsync();
+            // TODO: Query _dbContext.Questions filtered by TestId == testId.
+            // TODO: Include the Answers navigation property.
+            // TODO: Order the results by the Order property ascending.
+            // TODO: Return the result as a list.
+            throw new NotImplementedException();
         }
 
         public async Task<bool> CreateQuestionAsync(Question question)
         {
-            try
-            {
-                _dbContext.Questions.Add(question);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            // TODO: Wrap in a try-catch block.
+            // TODO: In the try block, add the question to _dbContext.Questions.
+            // TODO: Call SaveChangesAsync to persist the changes.
+            // TODO: Return true on success.
+            // TODO: In the catch block, return false.
+            throw new NotImplementedException();
         }
 
         public async Task<bool> UpdateQuestionAsync(Question question)
         {
-            try
-            {
-                _dbContext.Questions.Update(question);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            // TODO: Wrap in a try-catch block.
+            // TODO: In the try block, call _dbContext.Questions.Update(question).
+            // TODO: Call SaveChangesAsync to persist the changes.
+            // TODO: Return true on success.
+            // TODO: In the catch block, return false.
+            throw new NotImplementedException();
         }
 
         public async Task<bool> DeleteQuestionAsync(int questionId)
         {
-            try
-            {
-                var question = await _dbContext.Questions.FindAsync(questionId);
-                if (question == null)
-                    return false;
-
-                _dbContext.Questions.Remove(question);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            // TODO: Wrap in a try-catch block.
+            // TODO: In the try block, find the question using _dbContext.Questions.FindAsync(questionId).
+            // TODO: If the question is null, return false.
+            // TODO: Remove the question from _dbContext.Questions.
+            // TODO: Call SaveChangesAsync to persist the deletion.
+            // TODO: Return true on success.
+            // TODO: In the catch block, return false.
+            throw new NotImplementedException();
         }
 
         public async Task<bool> UploadQuestionImageAsync(int questionId, byte[] imageData, string mimeType)
         {
-            try
-            {
-                var question = await _dbContext.Questions.FindAsync(questionId);
-                if (question == null)
-                    return false;
-
-                question.ImageData = imageData;
-                question.ImageMimeType = mimeType;
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            // TODO: Wrap in a try-catch block.
+            // TODO: In the try block, find the question using _dbContext.Questions.FindAsync(questionId).
+            // TODO: If the question is null, return false.
+            // TODO: Set question.ImageData to the imageData parameter.
+            // TODO: Set question.ImageMimeType to the mimeType parameter.
+            // TODO: Call SaveChangesAsync to persist the changes.
+            // TODO: Return true on success.
+            // TODO: In the catch block, return false.
+            throw new NotImplementedException();
         }
     }
 }

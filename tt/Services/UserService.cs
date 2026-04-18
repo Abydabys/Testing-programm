@@ -19,63 +19,52 @@ namespace tt.Services
 
         public UserService(TestingDbContext dbContext)
         {
-            _dbContext = dbContext;
+            // TODO: Store the dbContext parameter in the _dbContext field.
         }
 
         public async Task<User> GetUserByIdAsync(int id)
         {
-            return await _dbContext.Users.FindAsync(id);
+            // TODO: Use _dbContext.Users.FindAsync(id) to look up the user by primary key.
+            // TODO: Return the result (or null if not found).
+            throw new NotImplementedException();
         }
 
         public async Task<User> GetUserByUsernameAsync(string username)
         {
-            return await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
+            // TODO: Query _dbContext.Users to find the first user where Username == username.
+            // TODO: Return the result, or null if no match is found.
+            throw new NotImplementedException();
         }
 
         public async Task<bool> CreateUserAsync(User user)
         {
-            try
-            {
-                _dbContext.Users.Add(user);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            // TODO: Wrap in a try-catch block.
+            // TODO: In the try block, add the user to _dbContext.Users.
+            // TODO: Call SaveChangesAsync to persist the new user.
+            // TODO: Return true on success.
+            // TODO: In the catch block, return false.
+            throw new NotImplementedException();
         }
 
         public async Task<bool> UpdateUserAsync(User user)
         {
-            try
-            {
-                _dbContext.Users.Update(user);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            // TODO: Wrap in a try-catch block.
+            // TODO: In the try block, call _dbContext.Users.Update(user).
+            // TODO: Call SaveChangesAsync to persist the changes.
+            // TODO: Return true on success.
+            // TODO: In the catch block, return false.
+            throw new NotImplementedException();
         }
 
         public async Task<bool> DeactivateUserAsync(int userId)
         {
-            try
-            {
-                var user = await _dbContext.Users.FindAsync(userId);
-                if (user == null)
-                    return false;
-
-                user.IsActive = false;
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            // TODO: Wrap in a try-catch block.
+            // TODO: In the try block, find the user by userId using FindAsync. If null, return false.
+            // TODO: Set user.IsActive to false.
+            // TODO: Call SaveChangesAsync to persist the change.
+            // TODO: Return true on success.
+            // TODO: In the catch block, return false.
+            throw new NotImplementedException();
         }
     }
 }

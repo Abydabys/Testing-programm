@@ -20,91 +20,65 @@ namespace tt.Services
 
         public TestService(TestingDbContext dbContext)
         {
-            _dbContext = dbContext;
+            // TODO: Store the dbContext parameter in the _dbContext field.
         }
 
         public async Task<Test> GetTestByIdAsync(int id)
         {
-            return await _dbContext.Tests
-                .Include(t => t.Questions)
-                .ThenInclude(q => q.Answers)
-                .FirstOrDefaultAsync(t => t.Id == id);
+            // TODO: Query _dbContext.Tests filtered by Id == id.
+            // TODO: Include the Questions navigation property.
+            // TODO: Then include each Question's Answers navigation property.
+            // TODO: Return the first match or null.
+            throw new NotImplementedException();
         }
 
         public async Task<IEnumerable<Test>> GetAllPublishedTestsAsync()
         {
-            return await _dbContext.Tests
-                .Where(t => t.IsPublished)
-                .OrderByDescending(t => t.UpdatedAt)
-                .ToListAsync();
+            // TODO: Query _dbContext.Tests filtered by IsPublished == true.
+            // TODO: Order results by UpdatedAt descending (most recently updated first).
+            // TODO: Return as a list.
+            throw new NotImplementedException();
         }
 
         public async Task<bool> CreateTestAsync(Test test)
         {
-            try
-            {
-                test.CreatedAt = DateTime.UtcNow;
-                test.UpdatedAt = DateTime.UtcNow;
-                _dbContext.Tests.Add(test);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            // TODO: Wrap in a try-catch block.
+            // TODO: In the try block, set test.CreatedAt and test.UpdatedAt to DateTime.UtcNow.
+            // TODO: Add the test to _dbContext.Tests.
+            // TODO: Call SaveChangesAsync and return true.
+            // TODO: In the catch block, return false.
+            throw new NotImplementedException();
         }
 
         public async Task<bool> UpdateTestAsync(Test test)
         {
-            try
-            {
-                test.UpdatedAt = DateTime.UtcNow;
-                _dbContext.Tests.Update(test);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            // TODO: Wrap in a try-catch block.
+            // TODO: In the try block, set test.UpdatedAt to DateTime.UtcNow.
+            // TODO: Call _dbContext.Tests.Update(test).
+            // TODO: Call SaveChangesAsync and return true.
+            // TODO: In the catch block, return false.
+            throw new NotImplementedException();
         }
 
         public async Task<bool> PublishTestAsync(int testId)
         {
-            try
-            {
-                var test = await _dbContext.Tests.FindAsync(testId);
-                if (test == null)
-                    return false;
-
-                test.IsPublished = true;
-                test.UpdatedAt = DateTime.UtcNow;
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            // TODO: Wrap in a try-catch block.
+            // TODO: In the try block, find the test using FindAsync(testId). If null, return false.
+            // TODO: Set test.IsPublished to true.
+            // TODO: Set test.UpdatedAt to DateTime.UtcNow.
+            // TODO: Call SaveChangesAsync and return true.
+            // TODO: In the catch block, return false.
+            throw new NotImplementedException();
         }
 
         public async Task<bool> DeleteTestAsync(int testId)
         {
-            try
-            {
-                var test = await _dbContext.Tests.FindAsync(testId);
-                if (test == null)
-                    return false;
-
-                _dbContext.Tests.Remove(test);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            // TODO: Wrap in a try-catch block.
+            // TODO: In the try block, find the test using FindAsync(testId). If null, return false.
+            // TODO: Remove the test from _dbContext.Tests.
+            // TODO: Call SaveChangesAsync and return true.
+            // TODO: In the catch block, return false.
+            throw new NotImplementedException();
         }
     }
 }
