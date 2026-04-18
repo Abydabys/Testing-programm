@@ -57,11 +57,6 @@ User can select one or more correct answers.
 
 ## Preparation for Work
 
-### 1. Install Dependencies
-```bash
-dotnet add package BCrypt.Net-Core
-```
-
 ### 2. Configure Connection String
 Edit the file `Data/TestingDbContext.cs` and set the correct connection string to your PostgreSQL database.
 
