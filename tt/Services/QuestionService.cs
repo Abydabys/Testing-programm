@@ -4,84 +4,108 @@ using tt.Models;
 
 namespace tt.Services
 {
-    public interface IQuestionService
+    // Сервис для управления вопросами и вариантами ответов
+    public class QuestionService
     {
-        Task<Question> GetQuestionByIdAsync(int id);
-        Task<IEnumerable<Question>> GetQuestionsByTestIdAsync(int testId);
-        Task<bool> CreateQuestionAsync(Question question);
-        Task<bool> UpdateQuestionAsync(Question question);
-        Task<bool> DeleteQuestionAsync(int questionId);
-        Task<bool> UploadQuestionImageAsync(int questionId, byte[] imageData, string mimeType);
-    }
+        private readonly TestingDbContext _context;
 
-    public class QuestionService : IQuestionService
-    {
-        private readonly TestingDbContext _dbContext;
-
-        public QuestionService(TestingDbContext dbContext)
+        public QuestionService(TestingDbContext context)
         {
-            // TODO: Store the dbContext parameter in the _dbContext field.
+            _context = context;
         }
 
-        public async Task<Question> GetQuestionByIdAsync(int id)
+        // Получить все вопросы конкретного теста (вместе с ответами)
+        public async Task<List<Question>> GetQuestionsByTestIdAsync(int testId)
         {
-            // TODO: Query _dbContext.Questions and include its Answers navigation property.
-            // TODO: Return the first question where Id matches the given id, or null if not found.
-            throw new NotImplementedException();
+            return await _context.Questions
+                .Include(q => q.Answers) // Подгружаем варианты ответов к каждому вопросу
+                .Where(q => q.TestId == testId)
+                .OrderBy(q => q.OrderIndex) // Сортируем по порядку
+                .ToListAsync();
         }
 
-        public async Task<IEnumerable<Question>> GetQuestionsByTestIdAsync(int testId)
+        // Получить один вопрос по ID вместе с его ответами
+        public async Task<Question?> GetQuestionWithAnswersAsync(int questionId)
         {
-            // TODO: Query _dbContext.Questions filtered by TestId == testId.
-            // TODO: Include the Answers navigation property.
-            // TODO: Order the results by the Order property ascending.
-            // TODO: Return the result as a list.
-            throw new NotImplementedException();
+            return await _context.Questions
+                .Include(q => q.Answers)
+                .FirstOrDefaultAsync(q => q.Id == questionId);
         }
 
-        public async Task<bool> CreateQuestionAsync(Question question)
+        // Добавить новый вопрос к тесту
+        public async Task<Question> AddQuestionAsync(int testId, string text, int orderIndex = 0)
         {
-            // TODO: Wrap in a try-catch block.
-            // TODO: In the try block, add the question to _dbContext.Questions.
-            // TODO: Call SaveChangesAsync to persist the changes.
-            // TODO: Return true on success.
-            // TODO: In the catch block, return false.
-            throw new NotImplementedException();
+            var question = new Question
+            {
+                TestId = testId,
+                Text = text,
+                OrderIndex = orderIndex
+            };
+
+            _context.Questions.Add(question);
+            await _context.SaveChangesAsync();
+            return question;
         }
 
+        // Добавить вариант ответа к вопросу
+        // isCorrect = true означает, что этот вариант — правильный
+        public async Task<Answer> AddAnswerAsync(int questionId, string text, bool isCorrect)
+        {
+            var answer = new Answer
+            {
+                QuestionId = questionId,
+                Text = text,
+                IsCorrect = isCorrect
+            };
+
+            _context.Answers.Add(answer);
+            await _context.SaveChangesAsync();
+            return answer;
+        }
+
+        // Обновить текст вопроса
         public async Task<bool> UpdateQuestionAsync(Question question)
         {
-            // TODO: Wrap in a try-catch block.
-            // TODO: In the try block, call _dbContext.Questions.Update(question).
-            // TODO: Call SaveChangesAsync to persist the changes.
-            // TODO: Return true on success.
-            // TODO: In the catch block, return false.
-            throw new NotImplementedException();
+            var existing = await _context.Questions.FindAsync(question.Id);
+            if (existing == null)
+                return false;
+
+            existing.Text = question.Text;
+            existing.OrderIndex = question.OrderIndex;
+
+            await _context.SaveChangesAsync();
+            return true;
         }
 
+        // Удалить вопрос (вместе со всеми его ответами — это делает БД автоматически)
         public async Task<bool> DeleteQuestionAsync(int questionId)
         {
-            // TODO: Wrap in a try-catch block.
-            // TODO: In the try block, find the question using _dbContext.Questions.FindAsync(questionId).
-            // TODO: If the question is null, return false.
-            // TODO: Remove the question from _dbContext.Questions.
-            // TODO: Call SaveChangesAsync to persist the deletion.
-            // TODO: Return true on success.
-            // TODO: In the catch block, return false.
-            throw new NotImplementedException();
+            var question = await _context.Questions.FindAsync(questionId);
+            if (question == null)
+                return false;
+
+            _context.Questions.Remove(question);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
-        public async Task<bool> UploadQuestionImageAsync(int questionId, byte[] imageData, string mimeType)
+        // Удалить конкретный вариант ответа
+        public async Task<bool> DeleteAnswerAsync(int answerId)
         {
-            // TODO: Wrap in a try-catch block.
-            // TODO: In the try block, find the question using _dbContext.Questions.FindAsync(questionId).
-            // TODO: If the question is null, return false.
-            // TODO: Set question.ImageData to the imageData parameter.
-            // TODO: Set question.ImageMimeType to the mimeType parameter.
-            // TODO: Call SaveChangesAsync to persist the changes.
-            // TODO: Return true on success.
-            // TODO: In the catch block, return false.
-            throw new NotImplementedException();
+            var answer = await _context.Answers.FindAsync(answerId);
+            if (answer == null)
+                return false;
+
+            _context.Answers.Remove(answer);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // Получить правильный ответ для вопроса
+        public async Task<Answer?> GetCorrectAnswerAsync(int questionId)
+        {
+            return await _context.Answers
+                .FirstOrDefaultAsync(a => a.QuestionId == questionId && a.IsCorrect);
         }
     }
 }

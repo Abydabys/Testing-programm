@@ -4,117 +4,137 @@ using tt.Models;
 
 namespace tt.Services
 {
-    public interface ITestAttemptService
+    // Сервис для управления попытками прохождения тестов
+    // Отвечает за запуск теста, сохранение ответов и подсчёт результата
+    public class TestAttemptService
     {
-        Task<TestAttempt> StartTestAsync(int userId, int testId);
-        Task<TestAttempt> GetTestAttemptByIdAsync(int id);
-        Task<IEnumerable<TestAttempt>> GetUserTestAttemptsAsync(int userId);
-        Task<IEnumerable<TestAttempt>> GetTestAttemptsForTestAsync(int testId);
-        Task<bool> SubmitAnswerAsync(int testAttemptId, int questionId, int answerId);
-        Task<bool> SubmitMultipleAnswersAsync(int testAttemptId, int questionId, List<int> answerIds);
-        Task<TestAttempt> CompleteTestAsync(int testAttemptId);
-        Task<bool> CanUserAttemptTestAsync(int userId, int testId);
-    }
+        private readonly TestingDbContext _context;
 
-    public class TestAttemptService : ITestAttemptService
-    {
-        private readonly TestingDbContext _dbContext;
-
-        public TestAttemptService(TestingDbContext dbContext)
+        public TestAttemptService(TestingDbContext context)
         {
-            // TODO: Store the dbContext parameter in the _dbContext field.
+            _context = context;
         }
 
-        public async Task<TestAttempt> StartTestAsync(int userId, int testId)
+        // Начать новую попытку прохождения теста
+        // Создаёт запись в базе данных и возвращает её
+        public async Task<TestAttempt> StartAttemptAsync(int userId, int testId)
         {
-            // TODO: Wrap in a try-catch block.
-            // TODO: In the try block, find the test by testId, including its Questions navigation property.
-            // TODO: If the test is null, return null.
-            // TODO: Calculate the maximum score by summing the Weight of all questions.
-            // TODO: Create a new TestAttempt object and set UserId, TestId, StartedAt (DateTime.UtcNow), Score (0), MaxScore, and IsCompleted (false).
-            // TODO: Add the new TestAttempt to _dbContext.TestAttempts.
-            // TODO: Call SaveChangesAsync and return the created testAttempt.
-            // TODO: In the catch block, return null.
-            throw new NotImplementedException();
+            var attempt = new TestAttempt
+            {
+                UserId = userId,
+                TestId = testId,
+                StartedAt = DateTime.UtcNow,
+                IsCompleted = false
+            };
+
+            _context.TestAttempts.Add(attempt);
+            await _context.SaveChangesAsync();
+            return attempt;
         }
 
-        public async Task<TestAttempt> GetTestAttemptByIdAsync(int id)
+        // Сохранить ответ пользователя на один вопрос
+        public async Task SaveUserAnswerAsync(int attemptId, int questionId, int answerId)
         {
-            // TODO: Query _dbContext.TestAttempts filtered by Id == id.
-            // TODO: Include the User, Test, and UserAnswers navigation properties.
-            // TODO: Return the first matching record or null.
-            throw new NotImplementedException();
+            // Проверяем, не ответил ли пользователь на этот вопрос раньше
+            var existing = await _context.UserAnswers
+                .FirstOrDefaultAsync(ua => ua.AttemptId == attemptId && ua.QuestionId == questionId);
+
+            if (existing != null)
+            {
+                // Если ответ уже был — обновляем его
+                existing.AnswerId = answerId;
+            }
+            else
+            {
+                // Если ответа ещё не было — создаём новый
+                var userAnswer = new UserAnswer
+                {
+                    AttemptId = attemptId,
+                    QuestionId = questionId,
+                    AnswerId = answerId
+                };
+                _context.UserAnswers.Add(userAnswer);
+            }
+
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<TestAttempt>> GetUserTestAttemptsAsync(int userId)
+        // Завершить тест: подсчитать результат и сохранить
+        // Возвращает количество правильных ответов
+        public async Task<int> FinishAttemptAsync(int attemptId)
         {
-            // TODO: Query _dbContext.TestAttempts filtered by UserId == userId.
-            // TODO: Include the Test navigation property.
-            // TODO: Order results by StartedAt descending (most recent first).
-            // TODO: Return as a list.
-            throw new NotImplementedException();
+            // Загружаем попытку вместе со всеми ответами пользователя
+            var attempt = await _context.TestAttempts
+                .Include(a => a.UserAnswers)
+                    .ThenInclude(ua => ua.Answer) // Подгружаем данные каждого ответа
+                .FirstOrDefaultAsync(a => a.Id == attemptId);
+
+            if (attempt == null)
+                return 0;
+
+            // Считаем количество правильных ответов
+            int correctCount = attempt.UserAnswers
+                .Count(ua => ua.Answer != null && ua.Answer.IsCorrect);
+
+            // Сохраняем результат и время окончания
+            attempt.Score = correctCount;
+            attempt.FinishedAt = DateTime.UtcNow;
+            attempt.IsCompleted = true;
+
+            await _context.SaveChangesAsync();
+            return correctCount;
         }
 
-        public async Task<IEnumerable<TestAttempt>> GetTestAttemptsForTestAsync(int testId)
+        // Получить все попытки конкретного пользователя
+        public async Task<List<TestAttempt>> GetUserAttemptsAsync(int userId)
         {
-            // TODO: Query _dbContext.TestAttempts filtered by TestId == testId.
-            // TODO: Include the User navigation property.
-            // TODO: Order results by CompletedAt descending.
-            // TODO: Return as a list.
-            throw new NotImplementedException();
+            return await _context.TestAttempts
+                .Include(a => a.Test) // Подгружаем название теста
+                .Where(a => a.UserId == userId)
+                .OrderByDescending(a => a.StartedAt) // Сначала последние попытки
+                .ToListAsync();
         }
 
-        public async Task<bool> SubmitAnswerAsync(int testAttemptId, int questionId, int answerId)
+        // Получить результаты конкретной попытки со всеми ответами
+        public async Task<TestAttempt?> GetAttemptResultAsync(int attemptId)
         {
-            // TODO: Wrap in a try-catch block.
-            // TODO: In the try block, create a new UserAnswer with TestAttemptId, QuestionId, AnswerId, and AnsweredAt (DateTime.UtcNow).
-            // TODO: Add the UserAnswer to _dbContext.UserAnswers.
-            // TODO: Call SaveChangesAsync and return true.
-            // TODO: In the catch block, return false.
-            throw new NotImplementedException();
+            return await _context.TestAttempts
+                .Include(a => a.Test)
+                .Include(a => a.UserAnswers)
+                    .ThenInclude(ua => ua.Question)
+                .Include(a => a.UserAnswers)
+                    .ThenInclude(ua => ua.Answer)
+                .FirstOrDefaultAsync(a => a.Id == attemptId);
         }
 
-        public async Task<bool> SubmitMultipleAnswersAsync(int testAttemptId, int questionId, List<int> answerIds)
+        // Подсчитать процент правильных ответов
+        // Например: 7 из 10 = 70%
+        public async Task<double> GetScorePercentageAsync(int attemptId)
         {
-            // TODO: Wrap in a try-catch block.
-            // TODO: In the try block, loop through each answerId in the answerIds list.
-            // TODO: For each answerId, create a new UserAnswer with TestAttemptId, QuestionId, AnswerId, and AnsweredAt.
-            // TODO: Add each UserAnswer to _dbContext.UserAnswers inside the loop.
-            // TODO: After the loop, call SaveChangesAsync once and return true.
-            // TODO: In the catch block, return false.
-            throw new NotImplementedException();
+            var attempt = await _context.TestAttempts
+                .Include(a => a.Test)
+                    .ThenInclude(t => t.Questions)
+                .FirstOrDefaultAsync(a => a.Id == attemptId);
+
+            if (attempt == null || attempt.Test.Questions.Count == 0)
+                return 0;
+
+            int totalQuestions = attempt.Test.Questions.Count;
+            double percentage = (double)attempt.Score / totalQuestions * 100;
+
+            // Округляем до двух знаков после запятой
+            return Math.Round(percentage, 2);
         }
 
-        public async Task<TestAttempt> CompleteTestAsync(int testAttemptId)
+        // Получить лучший результат пользователя по конкретному тесту
+        public async Task<int> GetBestScoreAsync(int userId, int testId)
         {
-            // TODO: Wrap in a try-catch block.
-            // TODO: In the try block, load the TestAttempt by testAttemptId.
-            //   - Include UserAnswers, then include each UserAnswer's Answer.
-            //   - Include Test, then include each Test's Questions.
-            // TODO: If the testAttempt is null, return null.
-            // TODO: Group the UserAnswers by the Answer's QuestionId.
-            // TODO: Loop through each group (one group per answered question):
-            //   - Find the matching Question from the Test's Questions list.
-            //   - If the question is not found, skip to the next group.
-            //   - Get the list of correct answer IDs for this question from _dbContext.Answers.
-            //   - Get the list of answer IDs the user submitted for this question.
-            //   - For SingleChoice: if the user selected exactly 1 answer and it matches the correct one, add the question's Weight to the score.
-            //   - For MultipleChoice: if the user's answers (sorted) match the correct answers (sorted) exactly, add the question's Weight to the score.
-            // TODO: Set testAttempt.Score to the calculated score.
-            // TODO: Set testAttempt.Percentage to (score / MaxScore) * 100.
-            // TODO: Set testAttempt.CompletedAt to DateTime.UtcNow.
-            // TODO: Set testAttempt.IsCompleted to true.
-            // TODO: Call SaveChangesAsync and return the completed testAttempt.
-            // TODO: In the catch block, return null.
-            throw new NotImplementedException();
-        }
+            var bestAttempt = await _context.TestAttempts
+                .Where(a => a.UserId == userId && a.TestId == testId && a.IsCompleted)
+                .OrderByDescending(a => a.Score)
+                .FirstOrDefaultAsync();
 
-        public async Task<bool> CanUserAttemptTestAsync(int userId, int testId)
-        {
-            // TODO: Find the test by testId using FindAsync. If it is null, return false.
-            // TODO: Count how many TestAttempts exist in _dbContext.TestAttempts where UserId == userId AND TestId == testId.
-            // TODO: Return true if the count is less than the test's MaxAttempts, otherwise return false.
-            throw new NotImplementedException();
+            return bestAttempt?.Score ?? 0;
         }
     }
 }

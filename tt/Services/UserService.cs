@@ -4,67 +4,84 @@ using tt.Models;
 
 namespace tt.Services
 {
-    public interface IUserService
+    // —ервис дл€ работы с пользовател€ми (получение, создание, обновление)
+    public class UserService
     {
-        Task<User> GetUserByIdAsync(int id);
-        Task<User> GetUserByUsernameAsync(string username);
-        Task<bool> CreateUserAsync(User user);
-        Task<bool> UpdateUserAsync(User user);
-        Task<bool> DeactivateUserAsync(int userId);
-    }
+        private readonly TestingDbContext _context;
 
-    public class UserService : IUserService
-    {
-        private readonly TestingDbContext _dbContext;
-
-        public UserService(TestingDbContext dbContext)
+        // ѕолучаем контекст базы данных через конструктор
+        public UserService(TestingDbContext context)
         {
-            // TODO: Store the dbContext parameter in the _dbContext field.
+            _context = context;
         }
 
-        public async Task<User> GetUserByIdAsync(int id)
+        // ѕолучить всех пользователей из базы данных
+        public async Task<List<User>> GetAllUsersAsync()
         {
-            // TODO: Use _dbContext.Users.FindAsync(id) to look up the user by primary key.
-            // TODO: Return the result (or null if not found).
-            throw new NotImplementedException();
+            return await _context.Users.ToListAsync();
         }
 
-        public async Task<User> GetUserByUsernameAsync(string username)
+        // Ќайти пользовател€ по его ID
+        public async Task<User?> GetUserByIdAsync(int userId)
         {
-            // TODO: Query _dbContext.Users to find the first user where Username == username.
-            // TODO: Return the result, or null if no match is found.
-            throw new NotImplementedException();
+            return await _context.Users.FindAsync(userId);
         }
 
-        public async Task<bool> CreateUserAsync(User user)
+        // Ќайти пользовател€ по имени пользовател€ (логину)
+        public async Task<User?> GetUserByUsernameAsync(string username)
         {
-            // TODO: Wrap in a try-catch block.
-            // TODO: In the try block, add the user to _dbContext.Users.
-            // TODO: Call SaveChangesAsync to persist the new user.
-            // TODO: Return true on success.
-            // TODO: In the catch block, return false.
-            throw new NotImplementedException();
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == username);
         }
 
+        // —оздать нового пользовател€ и сохранить в базе данных
+        public async Task<User> CreateUserAsync(string username, string password, string role = "Student")
+        {
+            var user = new User
+            {
+                Username = username,
+                // ’ешируем пароль перед сохранением (не храним в открытом виде)
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                Role = role,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+            return user;
+        }
+
+        // ќбновить данные существующего пользовател€
         public async Task<bool> UpdateUserAsync(User user)
         {
-            // TODO: Wrap in a try-catch block.
-            // TODO: In the try block, call _dbContext.Users.Update(user).
-            // TODO: Call SaveChangesAsync to persist the changes.
-            // TODO: Return true on success.
-            // TODO: In the catch block, return false.
-            throw new NotImplementedException();
+            var existing = await _context.Users.FindAsync(user.Id);
+            if (existing == null)
+                return false;
+
+            // ќбновл€ем только те пол€, которые можно мен€ть
+            existing.Username = user.Username;
+            existing.Role = user.Role;
+
+            await _context.SaveChangesAsync();
+            return true;
         }
 
-        public async Task<bool> DeactivateUserAsync(int userId)
+        // ”далить пользовател€ по ID
+        public async Task<bool> DeleteUserAsync(int userId)
         {
-            // TODO: Wrap in a try-catch block.
-            // TODO: In the try block, find the user by userId using FindAsync. If null, return false.
-            // TODO: Set user.IsActive to false.
-            // TODO: Call SaveChangesAsync to persist the change.
-            // TODO: Return true on success.
-            // TODO: In the catch block, return false.
-            throw new NotImplementedException();
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return false;
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // ѕроверить, существует ли пользователь с таким логином
+        public async Task<bool> UsernameExistsAsync(string username)
+        {
+            return await _context.Users.AnyAsync(u => u.Username == username);
         }
     }
 }

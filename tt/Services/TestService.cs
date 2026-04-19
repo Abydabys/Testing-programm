@@ -4,81 +4,87 @@ using tt.Models;
 
 namespace tt.Services
 {
-    public interface ITestService
+    // Сервис для работы с тестами: получение, создание, удаление
+    public class TestService
     {
-        Task<Test> GetTestByIdAsync(int id);
-        Task<IEnumerable<Test>> GetAllPublishedTestsAsync();
-        Task<bool> CreateTestAsync(Test test);
-        Task<bool> UpdateTestAsync(Test test);
-        Task<bool> PublishTestAsync(int testId);
-        Task<bool> DeleteTestAsync(int testId);
-    }
+        private readonly TestingDbContext _context;
 
-    public class TestService : ITestService
-    {
-        private readonly TestingDbContext _dbContext;
-
-        public TestService(TestingDbContext dbContext)
+        public TestService(TestingDbContext context)
         {
-            // TODO: Store the dbContext parameter in the _dbContext field.
+            _context = context;
         }
 
-        public async Task<Test> GetTestByIdAsync(int id)
+        // Получить все доступные тесты
+        public async Task<List<Test>> GetAllTestsAsync()
         {
-            // TODO: Query _dbContext.Tests filtered by Id == id.
-            // TODO: Include the Questions navigation property.
-            // TODO: Then include each Question's Answers navigation property.
-            // TODO: Return the first match or null.
-            throw new NotImplementedException();
+            return await _context.Tests.ToListAsync();
         }
 
-        public async Task<IEnumerable<Test>> GetAllPublishedTestsAsync()
+        // Получить один тест по ID, вместе со всеми его вопросами и ответами
+        public async Task<Test?> GetTestWithQuestionsAsync(int testId)
         {
-            // TODO: Query _dbContext.Tests filtered by IsPublished == true.
-            // TODO: Order results by UpdatedAt descending (most recently updated first).
-            // TODO: Return as a list.
-            throw new NotImplementedException();
+            return await _context.Tests
+                .Include(t => t.Questions)       // Подгружаем вопросы теста
+                    .ThenInclude(q => q.Answers) // Подгружаем варианты ответов к каждому вопросу
+                .FirstOrDefaultAsync(t => t.Id == testId);
         }
 
-        public async Task<bool> CreateTestAsync(Test test)
+        // Создать новый тест
+        public async Task<Test> CreateTestAsync(string title, string description, int timeLimitMinutes = 30)
         {
-            // TODO: Wrap in a try-catch block.
-            // TODO: In the try block, set test.CreatedAt and test.UpdatedAt to DateTime.UtcNow.
-            // TODO: Add the test to _dbContext.Tests.
-            // TODO: Call SaveChangesAsync and return true.
-            // TODO: In the catch block, return false.
-            throw new NotImplementedException();
+            var test = new Test
+            {
+                Title = title,
+                Description = description,
+                TimeLimitMinutes = timeLimitMinutes,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Tests.Add(test);
+            await _context.SaveChangesAsync();
+            return test;
         }
 
+        // Обновить данные теста (название, описание, время)
         public async Task<bool> UpdateTestAsync(Test test)
         {
-            // TODO: Wrap in a try-catch block.
-            // TODO: In the try block, set test.UpdatedAt to DateTime.UtcNow.
-            // TODO: Call _dbContext.Tests.Update(test).
-            // TODO: Call SaveChangesAsync and return true.
-            // TODO: In the catch block, return false.
-            throw new NotImplementedException();
+            var existing = await _context.Tests.FindAsync(test.Id);
+            if (existing == null)
+                return false;
+
+            existing.Title = test.Title;
+            existing.Description = test.Description;
+            existing.TimeLimitMinutes = test.TimeLimitMinutes;
+
+            await _context.SaveChangesAsync();
+            return true;
         }
 
-        public async Task<bool> PublishTestAsync(int testId)
-        {
-            // TODO: Wrap in a try-catch block.
-            // TODO: In the try block, find the test using FindAsync(testId). If null, return false.
-            // TODO: Set test.IsPublished to true.
-            // TODO: Set test.UpdatedAt to DateTime.UtcNow.
-            // TODO: Call SaveChangesAsync and return true.
-            // TODO: In the catch block, return false.
-            throw new NotImplementedException();
-        }
-
+        // Удалить тест и все связанные с ним данные
         public async Task<bool> DeleteTestAsync(int testId)
         {
-            // TODO: Wrap in a try-catch block.
-            // TODO: In the try block, find the test using FindAsync(testId). If null, return false.
-            // TODO: Remove the test from _dbContext.Tests.
-            // TODO: Call SaveChangesAsync and return true.
-            // TODO: In the catch block, return false.
-            throw new NotImplementedException();
+            var test = await _context.Tests.FindAsync(testId);
+            if (test == null)
+                return false;
+
+            _context.Tests.Remove(test);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // Получить количество вопросов в тесте
+        public async Task<int> GetQuestionCountAsync(int testId)
+        {
+            return await _context.Questions
+                .CountAsync(q => q.TestId == testId);
+        }
+
+        // Поиск тестов по названию (частичное совпадение)
+        public async Task<List<Test>> SearchTestsAsync(string searchTerm)
+        {
+            return await _context.Tests
+                .Where(t => t.Title.Contains(searchTerm))
+                .ToListAsync();
         }
     }
 }
