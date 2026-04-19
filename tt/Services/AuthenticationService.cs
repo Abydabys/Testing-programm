@@ -1,59 +1,109 @@
+using Microsoft.EntityFrameworkCore;
+using tt.Data;
 using tt.Models;
 
 namespace tt.Services
 {
-    public interface IAuthenticationService
+    // Сервис для входа в систему и проверки данных пользователя
+    public class AuthenticationService
     {
-        Task<User> LoginAsync(string username, string password);
-        Task<bool> RegisterAsync(string username, string password, string fullName);
-        Task<bool> ValidateUserAsync(User user);
-    }
+        private readonly TestingDbContext _context;
 
-    public class AuthenticationService : IAuthenticationService
-    {
-        private readonly IUserService _userService;
+        // Храним текущего вошедшего пользователя (пока приложение запущено)
+        public User? CurrentUser { get; private set; }
 
-        public AuthenticationService(IUserService userService)
+        public AuthenticationService(TestingDbContext context)
         {
-            // TODO: Store the userService parameter in the _userService field.
+            _context = context;
         }
 
-        public async Task<User> LoginAsync(string username, string password)
+        // Войти в систему: проверяем логин и пароль
+        // Возвращает true если данные верны, false если нет
+        public async Task<bool> LoginAsync(string username, string password)
         {
-            // TODO: Call _userService.GetUserByUsernameAsync(username) and store the result in a variable.
-            // TODO: If the user is null OR the password does not match the stored hash (use VerifyPassword), return null.
-            // TODO: If the credentials are valid, return the user object.
-            throw new NotImplementedException();
+            // Ищем пользователя по логину
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == username);
+
+            if (user == null)
+                return false; // Такого пользователя нет
+
+            // Проверяем пароль (сравниваем с хешем в базе данных)
+            bool passwordCorrect = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+
+            if (passwordCorrect)
+            {
+                // Запоминаем текущего пользователя
+                CurrentUser = user;
+                return true;
+            }
+
+            return false;
         }
 
-        public async Task<bool> RegisterAsync(string username, string password, string fullName)
+        // Выйти из системы — сбрасываем текущего пользователя
+        public void Logout()
         {
-            // TODO: Call _userService.GetUserByUsernameAsync(username) to check if the username is already taken.
-            // TODO: If an existing user was found, return false immediately.
-            // TODO: Create a new User object and set its Username, PasswordHash (use HashPassword), FullName, CreatedAt (DateTime.UtcNow), and IsActive (true).
-            // TODO: Call _userService.CreateUserAsync(user) and return its result.
-            throw new NotImplementedException();
+            CurrentUser = null;
         }
 
-        public async Task<bool> ValidateUserAsync(User user)
+        // Проверить, вошёл ли пользователь в систему
+        public bool IsLoggedIn()
         {
-            // TODO: If the user parameter is null, return false.
-            // TODO: Call _userService.GetUserByIdAsync(user.Id) and store the result.
-            // TODO: Return true only if the result is not null AND the returned user's IsActive is true.
-            throw new NotImplementedException();
+            return CurrentUser != null;
         }
 
-        private string HashPassword(string password)
+        // Проверить, является ли текущий пользователь администратором
+        public bool IsAdmin()
         {
-            // TODO: Return the password as-is (plain text storage).
-            // NOTE: Storing plain text passwords is insecure. This is intentional per project requirements.
-            throw new NotImplementedException();
+            return CurrentUser?.Role == "Admin";
         }
 
-        private bool VerifyPassword(string password, string hash)
+        // Проверить, является ли текущий пользователь студентом
+        public bool IsStudent()
         {
-            // TODO: Return true if the password string equals the hash string (plain text comparison).
-            throw new NotImplementedException();
+            return CurrentUser?.Role == "Student";
+        }
+
+        // Зарегистрировать нового пользователя
+        // Возвращает null если логин уже занят
+        public async Task<User?> RegisterAsync(string username, string password, string role = "Student")
+        {
+            // Проверяем, нет ли уже такого логина
+            bool exists = await _context.Users.AnyAsync(u => u.Username == username);
+            if (exists)
+                return null; // Логин уже занят
+
+            // Создаём нового пользователя с захешированным паролем
+            var newUser = new User
+            {
+                Username = username,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                Role = role,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Users.Add(newUser);
+            await _context.SaveChangesAsync();
+            return newUser;
+        }
+
+        // Сменить пароль текущего пользователя
+        // Возвращает true если смена прошла успешно
+        public async Task<bool> ChangePasswordAsync(string oldPassword, string newPassword)
+        {
+            if (CurrentUser == null)
+                return false;
+
+            // Сначала проверяем старый пароль
+            bool oldPasswordCorrect = BCrypt.Net.BCrypt.Verify(oldPassword, CurrentUser.PasswordHash);
+            if (!oldPasswordCorrect)
+                return false;
+
+            // Сохраняем новый пароль (хешируем)
+            CurrentUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }
