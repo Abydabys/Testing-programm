@@ -7,7 +7,6 @@ namespace tt.UI
 {
     public partial class TestSelectionForm : Form
     {
-        // CHANGED: NetworkServiceContainer instead of ServiceContainer.
         private readonly NetworkServiceContainer _serviceContainer;
         private readonly Models.User _currentUser;
 
@@ -65,7 +64,6 @@ namespace tt.UI
 {
     public partial class TestingForm : Form
     {
-        // CHANGED: NetworkServiceContainer instead of ServiceContainer.
         private readonly Client.NetworkServiceContainer _serviceContainer;
         private readonly Models.User _currentUser;
         private readonly Models.TestAttempt _testAttempt;
@@ -105,7 +103,6 @@ namespace tt.UI
             // TODO: Convert the result to a List and store it in _questions.
             // TODO: Call DisplayQuestion(0) to show the first question immediately.
         }
-
         private void DisplayQuestion(int index)
         {
             // TODO: If index is out of range, return early.
@@ -156,9 +153,6 @@ namespace tt.UI
 {
     public partial class ResultsForm : Form
     {
-        // NOTE: ResultsForm only displays the already-completed TestAttempt that was
-        // passed to it by TestingForm. It does not make any further network calls,
-        // so it does NOT need a NetworkServiceContainer.
         private readonly Models.TestAttempt _testAttempt;
 
         public ResultsForm(Models.TestAttempt testAttempt)
