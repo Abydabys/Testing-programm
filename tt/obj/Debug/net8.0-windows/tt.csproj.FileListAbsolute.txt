@@ -98,3 +98,16 @@ C:\Users\123\source\repos\tt\tt\obj\Debug\net8.0-windows\tt.pdb
 C:\Users\123\source\repos\tt\tt\obj\Debug\net8.0-windows\tt.genruntimeconfig.cache
 C:\Users\123\source\repos\tt\tt\obj\Debug\net8.0-windows\ref\tt.dll
 C:\Users\123\source\repos\tt\tt\obj\Debug\net8.0-windows\tt.sourcelink.json
+C:\Users\Dias\source\repos\Testing-programm\tt\obj\Debug\net8.0-windows\tt.csproj.AssemblyReference.cache
+C:\Users\Dias\source\repos\Testing-programm\tt\obj\Debug\net8.0-windows\tt.UI.LoginForm.resources
+C:\Users\Dias\source\repos\Testing-programm\tt\obj\Debug\net8.0-windows\tt.UI.TestSelectionForm.resources
+C:\Users\Dias\source\repos\Testing-programm\tt\obj\Debug\net8.0-windows\tt.Form1.resources
+C:\Users\Dias\source\repos\Testing-programm\tt\obj\Debug\net8.0-windows\tt.csproj.GenerateResource.cache
+C:\Users\Dias\source\repos\Testing-programm\tt\obj\Debug\net8.0-windows\tt.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Dias\source\repos\Testing-programm\tt\obj\Debug\net8.0-windows\tt.AssemblyInfoInputs.cache
+C:\Users\Dias\source\repos\Testing-programm\tt\obj\Debug\net8.0-windows\tt.AssemblyInfo.cs
+C:\Users\Dias\source\repos\Testing-programm\tt\obj\Debug\net8.0-windows\tt.csproj.CoreCompileInputs.cache
+C:\Users\Dias\source\repos\Testing-programm\tt\obj\Debug\net8.0-windows\tt.sourcelink.json
+C:\Users\Dias\source\repos\Testing-programm\tt\obj\Debug\net8.0-windows\tt.dll
+C:\Users\Dias\source\repos\Testing-programm\tt\obj\Debug\net8.0-windows\refint\tt.dll
+C:\Users\Dias\source\repos\Testing-programm\tt\obj\Debug\net8.0-windows\tt.pdb

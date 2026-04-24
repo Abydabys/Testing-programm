@@ -2,72 +2,253 @@ using tt.Client;
 
 namespace tt.UI
 {
-    public partial class LoginForm : Form
+    public class RegistrationForm : Form
     {
-        // CHANGED from ServiceContainer to NetworkServiceContainer.
-        // The form no longer touches the database directly — all calls
-        // go over TCP to the server through NetworkServiceContainer.
         private readonly NetworkServiceContainer _serviceContainer;
 
-        public LoginForm()
+        private TextBox txtUsername;
+        private TextBox txtPassword;
+        private TextBox txtFullName;
+        private Button btnRegister;
+        private Label lblError;
+
+        public string RegisteredUsername { get; private set; }
+
+        public RegistrationForm(NetworkServiceContainer serviceContainer)
         {
+            _serviceContainer = serviceContainer;
             InitializeComponent();
-            // TODO: Create a new NetworkServiceContainer instance (using default address "127.0.0.1" and port 9000)
-            //       and store it in _serviceContainer.
-            // TODO: Wrap the constructor call in a try-catch.
-            //       If the server is not reachable, show a MessageBox "Cannot connect to server. Is the server running?"
-            //       and then call Application.Exit() to close the application.
         }
 
         private void InitializeComponent()
         {
-            // TODO: Create a TextBox control named txtUsername for entering the username.
-            // TODO: Create a TextBox control named txtPassword for entering the password.
-            // TODO: Set txtPassword.UseSystemPasswordChar = true to hide the password input.
-            // TODO: Create a Button control named btnLogin with the text "Login".
-            // TODO: Create a Button control named btnRegister with the text "Register".
-            // TODO: Create a Label control named lblError for displaying error messages.
-            // TODO: Set lblError.ForeColor to Color.Red.
-            // TODO: Set lblError.Visible = false so it is hidden by default.
-            // TODO: Set this.Text (the form title bar) to "System Login".
-            // TODO: Set this.Width to 400 and this.Height to 300.
-            // TODO: Set this.StartPosition to FormStartPosition.CenterScreen.
-            // TODO: Set this.FormBorderStyle to FormBorderStyle.FixedDialog.
-            // TODO: Set this.MaximizeBox = false and this.MinimizeBox = false.
-            // TODO: Add all controls to the form using this.Controls.Add(...).
-            // TODO: Wire the login button click event: btnLogin.Click += BtnLogin_Click;
-            // TODO: Wire the register button click event: btnRegister.Click += BtnRegister_Click;
-            // TODO: Set this.AcceptButton = btnLogin so pressing Enter triggers login.
+            this.Text = "Registration";
+            this.Width = 400;
+            this.Height = 300;
+            this.StartPosition = FormStartPosition.CenterScreen;
+
+            txtUsername = new TextBox { Left = 100, Top = 40, Width = 200 };
+            txtPassword = new TextBox { Left = 100, Top = 80, Width = 200 };
+            txtPassword.UseSystemPasswordChar = true;
+
+            txtFullName = new TextBox { Left = 100, Top = 120, Width = 200 };
+
+            btnRegister = new Button
+            {
+                Text = "Register",
+                Left = 100,
+                Top = 160,
+                Width = 200
+            };
+
+            lblError = new Label
+            {
+                Left = 100,
+                Top = 200,
+                Width = 250,
+                ForeColor = Color.Red,
+                Visible = false
+            };
+
+            this.Controls.Add(txtUsername);
+            this.Controls.Add(txtPassword);
+            this.Controls.Add(txtFullName);
+            this.Controls.Add(btnRegister);
+            this.Controls.Add(lblError);
+
+            btnRegister.Click += BtnRegister_Click;
+        }
+
+        private async void BtnRegister_Click(object sender, EventArgs e)
+        {
+            string username = txtUsername.Text.Trim();
+            string password = txtPassword.Text;
+            string fullName = txtFullName.Text.Trim();
+
+            if (string.IsNullOrEmpty(username))
+            {
+                ShowError("Username is required");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(password))
+            {
+                ShowError("Password is required");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(fullName))
+            {
+                ShowError("Full name is required");
+                return;
+            }
+
+            try
+            {
+                var success = await _serviceContainer
+                    .AuthenticationService
+                    .RegisterAsync(username, password, fullName);
+
+                if (!success)
+                {
+                    ShowError("Registration failed");
+                    return;
+                }
+
+                RegisteredUsername = username;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+            catch
+            {
+                ShowError("Error during registration");
+            }
+        }
+
+        private void ShowError(string msg)
+        {
+            lblError.Text = msg;
+            lblError.Visible = true;
+        }
+    }
+
+    public partial class LoginForm : Form
+    {
+        private readonly NetworkServiceContainer _serviceContainer;
+
+        private TextBox txtUsername;
+        private TextBox txtPassword;
+        private Button btnLogin;
+        private Button btnRegister;
+        private Label lblError;
+
+        public LoginForm()
+        {
+            InitializeComponent();
+            try
+            {
+                _serviceContainer = new NetworkServiceContainer("127.0.0.1", 9000);
+            }
+            catch
+            {
+                MessageBox.Show("Cannot connect to server. Is the server running?");
+                Application.Exit();
+            }
+        }
+
+        private void InitializeComponent()
+        {
+            this.Text = "System Login";
+            this.Width = 400;
+            this.Height = 300;
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+
+            txtUsername = new TextBox { Left = 100, Top = 50, Width = 200 };
+            txtPassword = new TextBox { Left = 100, Top = 90, Width = 200 };
+            txtPassword.UseSystemPasswordChar = true;
+
+            btnLogin = new Button { Text = "Login", Left = 100, Top = 130, Width = 90 };
+            btnRegister = new Button { Text = "Register", Left = 210, Top = 130, Width = 90 };
+
+            lblError = new Label
+            {
+                Left = 100,
+                Top = 170,
+                Width = 250,
+                ForeColor = Color.Red,
+                Visible = false
+            };
+
+            this.Controls.Add(txtUsername);
+            this.Controls.Add(txtPassword);
+            this.Controls.Add(btnLogin);
+            this.Controls.Add(btnRegister);
+            this.Controls.Add(lblError);
+
+            btnLogin.Click += BtnLogin_Click;
+            btnRegister.Click += BtnRegister_Click;
+
+            this.AcceptButton = btnLogin;
         }
 
         private async void BtnLogin_Click(object sender, EventArgs e)
         {
-            // TODO: Read the username from txtUsername.Text and trim whitespace.
-            // TODO: Read the password from txtPassword.Text (do NOT trim passwords).
-            // TODO: If the username is null or empty, show an error "Username is required" and return early.
-            // TODO: If the password is null or empty, show an error "Password is required" and return early.
-            // TODO: Disable txtUsername, txtPassword, btnLogin, and btnRegister.
-            // TODO: Change the cursor to Cursors.WaitCursor to indicate loading.
-            // TODO: Hide lblError in case it was showing a previous error.
-            // TODO: Call _serviceContainer.AuthenticationService.LoginAsync(username, password) using await.
-            //       (This now sends a TCP request to the server instead of querying the DB directly.)
-            // TODO: Store the returned user in a variable.
-            // TODO: If user is null, display "Invalid username or password" in lblError and set lblError.Visible = true.
-            // TODO: If user is not null, create a new TestSelectionForm passing the user, call Show() on it, and call this.Close().
-            // TODO: Wrap the authentication call in a try-catch block.
-            // TODO: In the catch block, show a generic error message "An unexpected error occurred. Please try again."
-            // TODO: In the finally block, re-enable txtUsername, txtPassword, btnLogin, and btnRegister.
-            // TODO: In the finally block, restore the cursor to Cursors.Default.
+            string username = txtUsername.Text.Trim();
+            string password = txtPassword.Text;
+
+            if (string.IsNullOrEmpty(username))
+            {
+                ShowError("Username is required");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(password))
+            {
+                ShowError("Password is required");
+                return;
+            }
+
+            ToggleControls(false);
+            Cursor = Cursors.WaitCursor;
+            lblError.Visible = false;
+
+            try
+            {
+                var user = await _serviceContainer.AuthenticationService
+                    .LoginAsync(username, password);
+
+                if (user == null)
+                {
+                    ShowError("Invalid username or password");
+                    return;
+                }
+
+                new TestSelectionForm(user).Show();
+                this.Close();
+            }
+            catch
+            {
+                ShowError("An unexpected error occurred. Please try again.");
+            }
+            finally
+            {
+                ToggleControls(true);
+                Cursor = Cursors.Default;
+            }
+        }
+
+        private void ShowError(string message)
+        {
+            lblError.Text = message;
+            lblError.Visible = true;
         }
 
         private void BtnRegister_Click(object sender, EventArgs e)
         {
-            // TODO: Create a new RegistrationForm instance, passing any required services.
-            // TODO: Open the registration form as a modal dialog using ShowDialog().
-            // TODO: After the dialog closes, check the DialogResult to see if registration succeeded.
-            // TODO: If successful, pre-fill txtUsername with the newly registered username.
-            // TODO: Optionally set focus to txtPassword so the user can log in immediately.
-            // TODO: Wrap the block in a try-catch and show an error message if the form fails to open.
+            try
+            {
+                var form = new RegistrationForm(_serviceContainer);
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    txtUsername.Text = form.RegisteredUsername;
+                    txtPassword.Focus();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to open registration: " + ex.Message);
+            }
+        }
+
+        private void ToggleControls(bool enabled)
+        {
+            txtUsername.Enabled = enabled;
+            txtPassword.Enabled = enabled;
+            btnLogin.Enabled = enabled;
+            btnRegister.Enabled = enabled;
         }
     }
 }
