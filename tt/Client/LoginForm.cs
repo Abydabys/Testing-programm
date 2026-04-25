@@ -22,41 +22,63 @@ namespace tt.UI
 
         private void InitializeComponent()
         {
-            this.Text = "Registration";
-            this.Width = 400;
-            this.Height = 300;
-            this.StartPosition = FormStartPosition.CenterScreen;
-
-            txtUsername = new TextBox { Left = 100, Top = 40, Width = 200 };
-            txtPassword = new TextBox { Left = 100, Top = 80, Width = 200 };
+            txtUsername = new TextBox();
+            txtPassword = new TextBox();
+            txtFullName = new TextBox();
+            btnRegister = new Button();
+            lblError = new Label();
+            SuspendLayout();
+            // 
+            // txtUsername
+            // 
+            txtUsername.Location = new Point(142, 105);
+            txtUsername.Name = "txtUsername";
+            txtUsername.Size = new Size(100, 23);
+            txtUsername.TabIndex = 0;
+            // 
+            // txtPassword
+            // 
+            txtPassword.Location = new Point(142, 76);
+            txtPassword.Name = "txtPassword";
+            txtPassword.Size = new Size(100, 23);
+            txtPassword.TabIndex = 1;
             txtPassword.UseSystemPasswordChar = true;
-
-            txtFullName = new TextBox { Left = 100, Top = 120, Width = 200 };
-
-            btnRegister = new Button
-            {
-                Text = "Register",
-                Left = 100,
-                Top = 160,
-                Width = 200
-            };
-
-            lblError = new Label
-            {
-                Left = 100,
-                Top = 200,
-                Width = 250,
-                ForeColor = Color.Red,
-                Visible = false
-            };
-
-            this.Controls.Add(txtUsername);
-            this.Controls.Add(txtPassword);
-            this.Controls.Add(txtFullName);
-            this.Controls.Add(btnRegister);
-            this.Controls.Add(lblError);
-
+            // 
+            // txtFullName
+            // 
+            txtFullName.Location = new Point(142, 47);
+            txtFullName.Name = "txtFullName";
+            txtFullName.Size = new Size(100, 23);
+            txtFullName.TabIndex = 2;
+            // 
+            // btnRegister
+            // 
+            btnRegister.Location = new Point(154, 134);
+            btnRegister.Name = "btnRegister";
+            btnRegister.Size = new Size(75, 23);
+            btnRegister.TabIndex = 3;
             btnRegister.Click += BtnRegister_Click;
+            // 
+            // lblError
+            // 
+            lblError.Location = new Point(0, 0);
+            lblError.Name = "lblError";
+            lblError.Size = new Size(100, 23);
+            lblError.TabIndex = 4;
+            // 
+            // RegistrationForm
+            // 
+            ClientSize = new Size(384, 261);
+            Controls.Add(txtUsername);
+            Controls.Add(txtPassword);
+            Controls.Add(txtFullName);
+            Controls.Add(btnRegister);
+            Controls.Add(lblError);
+            Name = "RegistrationForm";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "Registration";
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         private async void BtnRegister_Click(object sender, EventArgs e)
@@ -138,40 +160,27 @@ namespace tt.UI
 
         private void InitializeComponent()
         {
-            this.Text = "System Login";
-            this.Width = 400;
-            this.Height = 300;
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-
-            txtUsername = new TextBox { Left = 100, Top = 50, Width = 200 };
-            txtPassword = new TextBox { Left = 100, Top = 90, Width = 200 };
+            Text = "System Login";
+            Width = 400;
+            Height = 300;
+            StartPosition = FormStartPosition.CenterScreen;
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            MaximizeBox = false;
+            MinimizeBox = false;
+            txtUsername = new TextBox();
+            txtPassword = new TextBox();
             txtPassword.UseSystemPasswordChar = true;
-
-            btnLogin = new Button { Text = "Login", Left = 100, Top = 130, Width = 90 };
-            btnRegister = new Button { Text = "Register", Left = 210, Top = 130, Width = 90 };
-
-            lblError = new Label
-            {
-                Left = 100,
-                Top = 170,
-                Width = 250,
-                ForeColor = Color.Red,
-                Visible = false
-            };
-
-            this.Controls.Add(txtUsername);
-            this.Controls.Add(txtPassword);
-            this.Controls.Add(btnLogin);
-            this.Controls.Add(btnRegister);
-            this.Controls.Add(lblError);
-
+            btnLogin = new Button();
+            btnRegister = new Button();
+            lblError = new Label();
+            Controls.Add(txtUsername);
+            Controls.Add(txtPassword);
+            Controls.Add(btnLogin);
+            Controls.Add(btnRegister);
+            Controls.Add(lblError);
             btnLogin.Click += BtnLogin_Click;
             btnRegister.Click += BtnRegister_Click;
-
-            this.AcceptButton = btnLogin;
+            AcceptButton = btnLogin;
         }
 
         private async void BtnLogin_Click(object sender, EventArgs e)

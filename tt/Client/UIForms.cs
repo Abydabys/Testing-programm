@@ -9,6 +9,9 @@ namespace tt.UI
     public partial class TestSelectionForm : Form
     {
         private readonly NetworkServiceContainer _serviceContainer;
+        private DataGridView dataGridView;
+        private Button btnStartTest;
+        private Label lblWelcome;
         private readonly Models.User _currentUser;
 
         public TestSelectionForm(Models.User user)
@@ -28,39 +31,44 @@ namespace tt.UI
 
         private void InitializeComponent()
         {
-            this.Text = "Available Tests";
-            this.Width = 800;
-            this.Height = 600;
-            this.StartPosition = FormStartPosition.CenterScreen;
-            DataGridView dataGridView = new DataGridView
-            {
-                Name = "dgvTests",
-                Left = 20,
-                Top = 50,
-                Width = 740,
-                Height = 400,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                ReadOnly = true
-            };
-            Button btnStartTest = new Button
-            {
-                Name = "btnStartTest",
-                Text = "Start Test",
-                Left = 20,
-                Top = 470,
-                Width = 100
-            };
-            Label lblWelcome = new Label
-            {
-                Name = "lblWelcome",
-                Left = 20,
-                Top = 20,
-                Width = 400,
-                Text = $"Welcome, {_currentUser.FullName}!"
-            };
-            this.Load += TestSelectionForm_Load;
+            dataGridView = new DataGridView();
+            btnStartTest = new Button();
+            lblWelcome = new Label();
+            ((System.ComponentModel.ISupportInitialize)dataGridView).BeginInit();
+            SuspendLayout();
+            // 
+            // dataGridView
+            // 
+            dataGridView.Location = new Point(251, 153);
+            dataGridView.Name = "dataGridView";
+            dataGridView.Size = new Size(240, 150);
+            dataGridView.TabIndex = 0;
+            // 
+            // btnStartTest
+            // 
+            btnStartTest.Location = new Point(0, 0);
+            btnStartTest.Name = "btnStartTest";
+            btnStartTest.Size = new Size(75, 23);
+            btnStartTest.TabIndex = 0;
             btnStartTest.Click += BtnStartTest_Click;
-            this.Controls.Add(dataGridView);
+            // 
+            // lblWelcome
+            // 
+            lblWelcome.Location = new Point(0, 0);
+            lblWelcome.Name = "lblWelcome";
+            lblWelcome.Size = new Size(100, 23);
+            lblWelcome.TabIndex = 0;
+            // 
+            // TestSelectionForm
+            // 
+            ClientSize = new Size(784, 561);
+            Controls.Add(dataGridView);
+            Name = "TestSelectionForm";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "Available Tests";
+            Load += TestSelectionForm_Load;
+            ((System.ComponentModel.ISupportInitialize)dataGridView).EndInit();
+            ResumeLayout(false);
         }
 
         private async void TestSelectionForm_Load(object sender, EventArgs e)
@@ -150,78 +158,25 @@ namespace tt.UI
 
         private void InitializeComponent()
         {
-            this.Text = "Test Taking";
-            this.Width = 1000;
-            this.Height = 700;
-            this.StartPosition = FormStartPosition.CenterScreen;
-
-            lblQuestion = new Label
-            {
-                Left = 20,
-                Top = 20,
-                Width = 900,
-                Height = 60
-            };
-
-            picQuestion = new PictureBox
-            {
-                Left = 20,
-                Top = 90,
-                Width = 300,
-                Height = 200,
-                SizeMode = PictureBoxSizeMode.Zoom,
-                Visible = false
-            };
-
-            pnlAnswers = new Panel
-            {
-                Left = 20,
-                Top = 300,
-                Width = 900,
-                Height = 250,
-                AutoScroll = true
-            };
-
-            lblProgress = new Label
-            {
-                Left = 20,
-                Top = 560,
-                Width = 200
-            };
-
-            btnPrevious = new Button
-            {
-                Text = "Previous",
-                Left = 300,
-                Top = 600,
-                Width = 100
-            };
-
-            btnNext = new Button
-            {
-                Text = "Next",
-                Left = 420,
-                Top = 600,
-                Width = 100
-            };
-
-            btnFinish = new Button
-            {
-                Text = "Finish Test",
-                Left = 540,
-                Top = 600,
-                Width = 120
-            };
-
-            this.Controls.Add(lblQuestion);
-            this.Controls.Add(picQuestion);
-            this.Controls.Add(pnlAnswers);
-            this.Controls.Add(lblProgress);
-            this.Controls.Add(btnPrevious);
-            this.Controls.Add(btnNext);
-            this.Controls.Add(btnFinish);
-
-            this.Load += TestingForm_Load;
+            Text = "Test Taking";
+            Width = 1000;
+            Height = 700;
+            StartPosition = FormStartPosition.CenterScreen;
+            lblQuestion = new Label();
+            picQuestion = new PictureBox();
+            pnlAnswers = new Panel();
+            lblProgress = new Label();
+            btnPrevious = new Button();
+            btnNext = new Button();
+            btnFinish = new Button();
+            Controls.Add(lblQuestion);
+            Controls.Add(picQuestion);
+            Controls.Add(pnlAnswers);
+            Controls.Add(lblProgress);
+            Controls.Add(btnPrevious);
+            Controls.Add(btnNext);
+            Controls.Add(btnFinish);
+            Load += TestingForm_Load;
             btnNext.Click += BtnNext_Click;
             btnPrevious.Click += BtnPrevious_Click;
             btnFinish.Click += BtnFinish_Click;
@@ -384,20 +339,14 @@ namespace tt.UI
 
         private void InitializeComponent()
         {
-            this.Text = "Test Results";
-            this.Width = 600;
-            this.Height = 500;
-            this.StartPosition = FormStartPosition.CenterScreen;
-            Button btnClose = new Button
-            {
-                Text = "Close",
-                Left = 250,
-                Top = 400,
-                Width = 100
-            };
+            Text = "Test Results";
+            Width = 600;
+            Height = 500;
+            StartPosition = FormStartPosition.CenterScreen;
+            Button btnClose = new Button();
             btnClose.Click += BtnClose_Click;
-            this.Load += ResultsForm_Load;
-            this.Controls.Add(btnClose);
+            Load += ResultsForm_Load;
+            Controls.Add(btnClose);
         }
 
         private void ResultsForm_Load(object sender, EventArgs e)
