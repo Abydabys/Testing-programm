@@ -1,3 +1,5 @@
+using tt.Client;
+
 namespace tt
 {
     internal static class Program
@@ -7,7 +9,7 @@ namespace tt
         {
             ApplicationConfiguration.Initialize();
             
-            var serviceContainer = new ServiceContainer();
+            var serviceContainer = new NetworkServiceContainer();
             
             Application.Run(new Form1());
         }
