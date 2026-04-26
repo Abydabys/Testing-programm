@@ -28,10 +28,10 @@ namespace tt.Server
         public RequestProcessor(TestingDbContext dbContext)
         {
             _userService = new UserService(dbContext);
-            _authService = new AuthenticationService(dbContext);
-            _testService = new TestService(dbContext);
-            _questionService = new QuestionService(dbContext);
-            _testAttemptService = new TestAttemptService(dbContext);
+            _authService = new IAuthenticationService(dbContext);
+            _testService = new ITestService(dbContext);
+            _questionService = new IQuestionService(dbContext);
+            _testAttemptService = new ITestAttemptService(dbContext);
         }
 
         // ── Dispatcher ────────────────────────────────────────────────────
