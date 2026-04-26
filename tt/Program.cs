@@ -1,4 +1,5 @@
 using tt.Client;
+using tt.UI;
 
 namespace tt
 {
@@ -11,7 +12,7 @@ namespace tt
             
             var serviceContainer = new NetworkServiceContainer();
             
-            Application.Run(new Form1());
+            Application.Run(new LoginForm());
         }
     }
 }

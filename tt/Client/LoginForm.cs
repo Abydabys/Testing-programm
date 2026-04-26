@@ -31,7 +31,7 @@ namespace tt.UI
             // 
             // txtUsername
             // 
-            txtUsername.Location = new Point(142, 105);
+            txtUsername.Location = new Point(142, 47);
             txtUsername.Name = "txtUsername";
             txtUsername.Size = new Size(100, 23);
             txtUsername.TabIndex = 0;
@@ -46,25 +46,19 @@ namespace tt.UI
             // 
             // txtFullName
             // 
-            txtFullName.Location = new Point(142, 47);
+            txtFullName.Location = new Point(142, 105);
             txtFullName.Name = "txtFullName";
             txtFullName.Size = new Size(100, 23);
             txtFullName.TabIndex = 2;
             // 
             // btnRegister
             // 
-            btnRegister.Location = new Point(154, 134);
+            btnRegister.Location = new Point(142, 134);
             btnRegister.Name = "btnRegister";
-            btnRegister.Size = new Size(75, 23);
+            btnRegister.Size = new Size(100, 23);
             btnRegister.TabIndex = 3;
             btnRegister.Click += BtnRegister_Click;
-            // 
-            // lblError
-            // 
-            lblError.Location = new Point(0, 0);
-            lblError.Name = "lblError";
-            lblError.Size = new Size(100, 23);
-            lblError.TabIndex = 4;
+            btnRegister.Text = "Зарегистрироваться";
             // 
             // RegistrationForm
             // 
@@ -89,19 +83,19 @@ namespace tt.UI
 
             if (string.IsNullOrEmpty(username))
             {
-                ShowError("Username is required");
+                ShowError("Введите имя пользователя");
                 return;
             }
 
             if (string.IsNullOrEmpty(password))
             {
-                ShowError("Password is required");
+                ShowError("Введите пароль");
                 return;
             }
 
             if (string.IsNullOrEmpty(fullName))
             {
-                ShowError("Full name is required");
+                ShowError("Введите полное имя");
                 return;
             }
 
@@ -113,7 +107,7 @@ namespace tt.UI
 
                 if (!success)
                 {
-                    ShowError("Registration failed");
+                    ShowError("Регистрация неуспешна.");
                     return;
                 }
 
@@ -123,14 +117,13 @@ namespace tt.UI
             }
             catch
             {
-                ShowError("Error during registration");
+                ShowError("Ошибка при регистрации");
             }
         }
 
         private void ShowError(string msg)
         {
-            lblError.Text = msg;
-            lblError.Visible = true;
+            MessageBox.Show($"{msg}", "Ошибка");
         }
     }
 
@@ -153,7 +146,7 @@ namespace tt.UI
             }
             catch
             {
-                MessageBox.Show("Cannot connect to server. Is the server running?");
+                MessageBox.Show("Невозможно подключиться к серверу.");
                 Application.Exit();
             }
         }
@@ -169,10 +162,11 @@ namespace tt.UI
             MinimizeBox = false;
             txtUsername = new TextBox();
             txtPassword = new TextBox();
+            txtUsername.Location = new Point(140, 47);
+            txtPassword.Location = new Point(140, 76);
             txtPassword.UseSystemPasswordChar = true;
             btnLogin = new Button();
             btnRegister = new Button();
-            lblError = new Label();
             Controls.Add(txtUsername);
             Controls.Add(txtPassword);
             Controls.Add(btnLogin);
@@ -181,6 +175,14 @@ namespace tt.UI
             btnLogin.Click += BtnLogin_Click;
             btnRegister.Click += BtnRegister_Click;
             AcceptButton = btnLogin;
+            btnLogin.Location = new Point(140, 105);
+            btnLogin.Height = 23;
+            btnLogin.Width = 100;
+            btnLogin.Text = "Логин";
+            btnRegister.Location = new Point(140, 134);
+            btnRegister.Height = 23;
+            btnRegister.Width = 100;
+            btnRegister.Text = "Регистрация";
         }
 
         private async void BtnLogin_Click(object sender, EventArgs e)
@@ -190,13 +192,13 @@ namespace tt.UI
 
             if (string.IsNullOrEmpty(username))
             {
-                ShowError("Username is required");
+                ShowError("Введите имя пользователя");
                 return;
             }
 
             if (string.IsNullOrEmpty(password))
             {
-                ShowError("Password is required");
+                ShowError("Введите пароль");
                 return;
             }
 
@@ -211,7 +213,7 @@ namespace tt.UI
 
                 if (user == null)
                 {
-                    ShowError("Invalid username or password");
+                    ShowError("Неверное имя пользователя. Попробуйте еще раз.");
                     return;
                 }
 
@@ -220,7 +222,7 @@ namespace tt.UI
             }
             catch
             {
-                ShowError("An unexpected error occurred. Please try again.");
+                ShowError("Произошла неизвестная ошибка. Попробуйте еще раз");
             }
             finally
             {
@@ -231,8 +233,7 @@ namespace tt.UI
 
         private void ShowError(string message)
         {
-            lblError.Text = message;
-            lblError.Visible = true;
+            MessageBox.Show($"{message}", "Ошибка");
         }
 
         private void BtnRegister_Click(object sender, EventArgs e)
@@ -248,7 +249,7 @@ namespace tt.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Failed to open registration: " + ex.Message);
+                MessageBox.Show("Не удалось открыть меню регистрации: " + ex.Message);
             }
         }
 
@@ -261,3 +262,4 @@ namespace tt.UI
         }
     }
 }
+
