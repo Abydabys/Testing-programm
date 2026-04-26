@@ -21,7 +21,7 @@ namespace tt.Server
         private readonly ITestService _testService;
         private readonly IQuestionService _questionService;
         private readonly ITestAttemptService _testAttemptService;
-        private readonly IUserService _userService;
+        private readonly UserService _userService;
 
         // ── Constructor ───────────────────────────────────────────────────
 
