@@ -4,8 +4,7 @@ using tt.Models;
 
 namespace tt.Services
 {
-    // Сервис для работы с тестами: получение, создание, удаление
-    public class TestService
+    public class TestService : ITestService
     {
         private readonly TestingDbContext _context;
 
@@ -14,77 +13,69 @@ namespace tt.Services
             _context = context;
         }
 
-        // Получить все доступные тесты
-        public async Task<List<Test>> GetAllTestsAsync()
-        {
-            return await _context.Tests.ToListAsync();
-        }
-
-        // Получить один тест по ID, вместе со всеми его вопросами и ответами
-        public async Task<Test?> GetTestWithQuestionsAsync(int testId)
+        // Получить тест по ID вместе со всеми вопросами и ответами
+        public async Task<Test> GetTestByIdAsync(int id)
         {
             return await _context.Tests
-                .Include(t => t.Questions)       // Подгружаем вопросы теста
-                    .ThenInclude(q => q.Answers) // Подгружаем варианты ответов к каждому вопросу
-                .FirstOrDefaultAsync(t => t.Id == testId);
+                .Include(t => t.Questions)
+                    .ThenInclude(q => q.Answers)
+                .FirstOrDefaultAsync(t => t.Id == id);
         }
 
-        // Создать новый тест
-        public async Task<Test> CreateTestAsync(string title, string description, int timeLimitMinutes = 30)
+        // Получить все опубликованные тесты (видны студентам)
+        public async Task<IEnumerable<Test>> GetAllPublishedTestsAsync()
         {
-            var test = new Test
-            {
-                Title = title,
-                Description = description,
-                TimeLimitMinutes = timeLimitMinutes,
-                CreatedAt = DateTime.UtcNow
-            };
+            return await _context.Tests
+                .Where(t => t.IsPublished)
+                .ToListAsync();
+        }
 
+        // Создать новый тест — после сохранения test.Id будет заполнен из БД
+        public async Task<bool> CreateTestAsync(Test test)
+        {
+            test.CreatedAt = DateTime.UtcNow;
+            test.UpdatedAt = DateTime.UtcNow;
             _context.Tests.Add(test);
             await _context.SaveChangesAsync();
-            return test;
+            return true;
         }
 
-        // Обновить данные теста (название, описание, время)
+        // Обновить данные теста
         public async Task<bool> UpdateTestAsync(Test test)
         {
             var existing = await _context.Tests.FindAsync(test.Id);
-            if (existing == null)
-                return false;
+            if (existing == null) return false;
 
             existing.Title = test.Title;
             existing.Description = test.Description;
-            existing.TimeLimitMinutes = test.TimeLimitMinutes;
+            existing.MaxAttempts = test.MaxAttempts;
+            existing.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
             return true;
         }
 
-        // Удалить тест и все связанные с ним данные
+        // Опубликовать тест — сделать доступным для студентов
+        public async Task<bool> PublishTestAsync(int testId)
+        {
+            var test = await _context.Tests.FindAsync(testId);
+            if (test == null) return false;
+
+            test.IsPublished = true;
+            test.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // Удалить тест
         public async Task<bool> DeleteTestAsync(int testId)
         {
             var test = await _context.Tests.FindAsync(testId);
-            if (test == null)
-                return false;
+            if (test == null) return false;
 
             _context.Tests.Remove(test);
             await _context.SaveChangesAsync();
             return true;
-        }
-
-        // Получить количество вопросов в тесте
-        public async Task<int> GetQuestionCountAsync(int testId)
-        {
-            return await _context.Questions
-                .CountAsync(q => q.TestId == testId);
-        }
-
-        // Поиск тестов по названию (частичное совпадение)
-        public async Task<List<Test>> SearchTestsAsync(string searchTerm)
-        {
-            return await _context.Tests
-                .Where(t => t.Title.Contains(searchTerm))
-                .ToListAsync();
         }
     }
 }

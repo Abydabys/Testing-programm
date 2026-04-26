@@ -4,9 +4,7 @@ using tt.Models;
 
 namespace tt.Services
 {
-    // Сервис для управления попытками прохождения тестов
-    // Отвечает за запуск теста, сохранение ответов и подсчёт результата
-    public class TestAttemptService
+    public class TestAttemptService : ITestAttemptService
     {
         private readonly TestingDbContext _context;
 
@@ -16,15 +14,17 @@ namespace tt.Services
         }
 
         // Начать новую попытку прохождения теста
-        // Создаёт запись в базе данных и возвращает её
-        public async Task<TestAttempt> StartAttemptAsync(int userId, int testId)
+        public async Task<TestAttempt> StartTestAsync(int userId, int testId)
         {
             var attempt = new TestAttempt
             {
                 UserId = userId,
                 TestId = testId,
                 StartedAt = DateTime.UtcNow,
-                IsCompleted = false
+                IsCompleted = false,
+                Score = 0,
+                MaxScore = 0,
+                Percentage = 0
             };
 
             _context.TestAttempts.Add(attempt);
@@ -32,109 +32,136 @@ namespace tt.Services
             return attempt;
         }
 
-        // Сохранить ответ пользователя на один вопрос
-        public async Task SaveUserAnswerAsync(int attemptId, int questionId, int answerId)
-        {
-            // Проверяем, не ответил ли пользователь на этот вопрос раньше
-            var existing = await _context.UserAnswers
-                .FirstOrDefaultAsync(ua => ua.AttemptId == attemptId && ua.QuestionId == questionId);
-
-            if (existing != null)
-            {
-                // Если ответ уже был — обновляем его
-                existing.AnswerId = answerId;
-            }
-            else
-            {
-                // Если ответа ещё не было — создаём новый
-                var userAnswer = new UserAnswer
-                {
-                    AttemptId = attemptId,
-                    QuestionId = questionId,
-                    AnswerId = answerId
-                };
-                _context.UserAnswers.Add(userAnswer);
-            }
-
-            await _context.SaveChangesAsync();
-        }
-
-        // Завершить тест: подсчитать результат и сохранить
-        // Возвращает количество правильных ответов
-        public async Task<int> FinishAttemptAsync(int attemptId)
-        {
-            // Загружаем попытку вместе со всеми ответами пользователя
-            var attempt = await _context.TestAttempts
-                .Include(a => a.UserAnswers)
-                    .ThenInclude(ua => ua.Answer) // Подгружаем данные каждого ответа
-                .FirstOrDefaultAsync(a => a.Id == attemptId);
-
-            if (attempt == null)
-                return 0;
-
-            // Считаем количество правильных ответов
-            int correctCount = attempt.UserAnswers
-                .Count(ua => ua.Answer != null && ua.Answer.IsCorrect);
-
-            // Сохраняем результат и время окончания
-            attempt.Score = correctCount;
-            attempt.FinishedAt = DateTime.UtcNow;
-            attempt.IsCompleted = true;
-
-            await _context.SaveChangesAsync();
-            return correctCount;
-        }
-
-        // Получить все попытки конкретного пользователя
-        public async Task<List<TestAttempt>> GetUserAttemptsAsync(int userId)
-        {
-            return await _context.TestAttempts
-                .Include(a => a.Test) // Подгружаем название теста
-                .Where(a => a.UserId == userId)
-                .OrderByDescending(a => a.StartedAt) // Сначала последние попытки
-                .ToListAsync();
-        }
-
-        // Получить результаты конкретной попытки со всеми ответами
-        public async Task<TestAttempt?> GetAttemptResultAsync(int attemptId)
+        // Получить попытку по ID
+        public async Task<TestAttempt> GetTestAttemptByIdAsync(int id)
         {
             return await _context.TestAttempts
                 .Include(a => a.Test)
-                .Include(a => a.UserAnswers)
-                    .ThenInclude(ua => ua.Question)
-                .Include(a => a.UserAnswers)
-                    .ThenInclude(ua => ua.Answer)
-                .FirstOrDefaultAsync(a => a.Id == attemptId);
+                .FirstOrDefaultAsync(a => a.Id == id);
         }
 
-        // Подсчитать процент правильных ответов
-        // Например: 7 из 10 = 70%
-        public async Task<double> GetScorePercentageAsync(int attemptId)
+        // Получить историю тестов пользователя
+        public async Task<IEnumerable<TestAttempt>> GetUserTestAttemptsAsync(int userId)
+        {
+            return await _context.TestAttempts
+                .Include(a => a.Test)
+                .Where(a => a.UserId == userId)
+                .OrderByDescending(a => a.StartedAt)
+                .ToListAsync();
+        }
+
+        // Получить все попытки по конкретному тесту (для преподавателя)
+        public async Task<IEnumerable<TestAttempt>> GetTestAttemptsForTestAsync(int testId)
+        {
+            return await _context.TestAttempts
+                .Include(a => a.User)
+                .Where(a => a.TestId == testId)
+                .OrderByDescending(a => a.StartedAt)
+                .ToListAsync();
+        }
+
+        // Сохранить одиночный ответ на вопрос
+        // Если уже отвечал на этот вопрос — обновляем ответ
+        public async Task<bool> SubmitAnswerAsync(int testAttemptId, int questionId, int answerId)
+        {
+            var existing = await _context.UserAnswers
+                .FirstOrDefaultAsync(ua => ua.TestAttemptId == testAttemptId
+                                        && ua.QuestionId == questionId);
+
+            if (existing != null)
+            {
+                existing.AnswerId = answerId;
+                existing.AnsweredAt = DateTime.UtcNow;
+            }
+            else
+            {
+                _context.UserAnswers.Add(new UserAnswer
+                {
+                    TestAttemptId = testAttemptId,
+                    QuestionId = questionId,
+                    AnswerId = answerId,
+                    AnsweredAt = DateTime.UtcNow
+                });
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // Сохранить несколько ответов на один вопрос (множественный выбор)
+        public async Task<bool> SubmitMultipleAnswersAsync(int testAttemptId, int questionId, List<int> answerIds)
+        {
+            // Удаляем старые ответы на этот вопрос
+            var old = _context.UserAnswers
+                .Where(ua => ua.TestAttemptId == testAttemptId && ua.QuestionId == questionId);
+            _context.UserAnswers.RemoveRange(old);
+
+            // Сохраняем новые
+            foreach (var answerId in answerIds)
+            {
+                _context.UserAnswers.Add(new UserAnswer
+                {
+                    TestAttemptId = testAttemptId,
+                    QuestionId = questionId,
+                    AnswerId = answerId,
+                    AnsweredAt = DateTime.UtcNow
+                });
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // Завершить тест: подсчитываем очки и процент, сохраняем результат
+        public async Task<TestAttempt> CompleteTestAsync(int testAttemptId)
         {
             var attempt = await _context.TestAttempts
                 .Include(a => a.Test)
                     .ThenInclude(t => t.Questions)
-                .FirstOrDefaultAsync(a => a.Id == attemptId);
+                .Include(a => a.UserAnswers)
+                    .ThenInclude(ua => ua.Answer)
+                .FirstOrDefaultAsync(a => a.Id == testAttemptId);
 
-            if (attempt == null || attempt.Test.Questions.Count == 0)
-                return 0;
+            if (attempt == null) return null;
 
-            int totalQuestions = attempt.Test.Questions.Count;
-            double percentage = (double)attempt.Score / totalQuestions * 100;
+            // Считаем набранные очки (сумма Weight правильно отвеченных вопросов)
+            int score = 0;
+            int maxScore = 0;
 
-            // Округляем до двух знаков после запятой
-            return Math.Round(percentage, 2);
+            foreach (var question in attempt.Test.Questions)
+            {
+                maxScore += question.Weight;
+
+                var userAnswer = attempt.UserAnswers
+                    .FirstOrDefault(ua => ua.QuestionId == question.Id);
+
+                if (userAnswer?.Answer != null && userAnswer.Answer.IsCorrect)
+                    score += question.Weight;
+            }
+
+            attempt.Score = score;
+            attempt.MaxScore = maxScore;
+            attempt.Percentage = maxScore > 0 ? Math.Round((double)score / maxScore * 100, 2) : 0;
+            attempt.CompletedAt = DateTime.UtcNow;
+            attempt.IsCompleted = true;
+
+            await _context.SaveChangesAsync();
+            return attempt;
         }
 
-        // Получить лучший результат пользователя по конкретному тесту
-        public async Task<int> GetBestScoreAsync(int userId, int testId)
+        // Проверить, может ли пользователь пройти тест ещё раз
+        public async Task<bool> CanUserAttemptTestAsync(int userId, int testId)
         {
-            var bestAttempt = await _context.TestAttempts
-                .Where(a => a.UserId == userId && a.TestId == testId && a.IsCompleted)
-                .OrderByDescending(a => a.Score)
-                .FirstOrDefaultAsync();
+            var test = await _context.Tests.FindAsync(testId);
+            if (test == null) return false;
 
-            return bestAttempt?.Score ?? 0;
+            // Если MaxAttempts = 0 — неограниченное количество попыток
+            if (test.MaxAttempts == 0) return true;
+
+            int attemptCount = await _context.TestAttempts
+                .CountAsync(a => a.UserId == userId && a.TestId == testId);
+
+            return attemptCount < test.MaxAttempts;
         }
     }
 }
