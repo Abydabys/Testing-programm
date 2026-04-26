@@ -4,11 +4,11 @@ using tt.Models;
 
 namespace tt.Services
 {
-    public class TestAttemptService : ITestAttemptService
+    public class ITestAttemptService
     {
         private readonly TestingDbContext _context;
 
-        public TestAttemptService(TestingDbContext context)
+        public ITestAttemptService(TestingDbContext context)
         {
             _context = context;
         }
