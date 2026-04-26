@@ -10,7 +10,6 @@ namespace tt.UI
         private TextBox txtPassword;
         private TextBox txtFullName;
         private Button btnRegister;
-        private Label lblError;
 
         public string RegisteredUsername { get; private set; }
 
@@ -26,7 +25,6 @@ namespace tt.UI
             txtPassword = new TextBox();
             txtFullName = new TextBox();
             btnRegister = new Button();
-            lblError = new Label();
             SuspendLayout();
             // 
             // txtUsername
@@ -67,7 +65,6 @@ namespace tt.UI
             Controls.Add(txtPassword);
             Controls.Add(txtFullName);
             Controls.Add(btnRegister);
-            Controls.Add(lblError);
             Name = "RegistrationForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Registration";
@@ -115,9 +112,9 @@ namespace tt.UI
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
-            catch
+            catch (Exception ex)
             {
-                ShowError("Ошибка при регистрации");
+                ShowError($"Ошибка при регистрации {ex}");
             }
         }
 
@@ -135,7 +132,6 @@ namespace tt.UI
         private TextBox txtPassword;
         private Button btnLogin;
         private Button btnRegister;
-        private Label lblError;
 
         public LoginForm()
         {
@@ -171,7 +167,6 @@ namespace tt.UI
             Controls.Add(txtPassword);
             Controls.Add(btnLogin);
             Controls.Add(btnRegister);
-            Controls.Add(lblError);
             btnLogin.Click += BtnLogin_Click;
             btnRegister.Click += BtnRegister_Click;
             AcceptButton = btnLogin;
@@ -204,7 +199,6 @@ namespace tt.UI
 
             ToggleControls(false);
             Cursor = Cursors.WaitCursor;
-            lblError.Visible = false;
 
             try
             {
@@ -220,9 +214,9 @@ namespace tt.UI
                 new TestSelectionForm(user).Show();
                 this.Close();
             }
-            catch
+            catch (Exception ex)
             {
-                ShowError("Произошла неизвестная ошибка. Попробуйте еще раз");
+                ShowError($"Произошла неизвестная ошибка. Попробуйте еще раз {ex}");
             }
             finally
             {
