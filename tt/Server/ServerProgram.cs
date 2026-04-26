@@ -1,25 +1,29 @@
+using System.Net;
+using System.Net.Sockets;
+using tt.Server;
+
 namespace tt
 {
     internal static class ServerProgram
     {
-        static async Task Main(strig[] args)
+        static async Task Main(string[] args)
         {
             Console.WriteLine("Testing system Server Starting...");
-            const int port = 55555;
+            const int port = 9000;
             try
             {
-                TcpServer tcpServer = new TcpServer(IPAddress.Any, Server, port);
+                TcpServer tcpServer = new TcpServer(port);
                 Console.WriteLine($"Server listening on port {port}");
                 await tcpServer.StartAsync();
 
             }
 
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Console.WriteLine($"Errors: {ex.Message}");
+                Console.WriteLine($"Error: {ex.Message}");
                 Console.ReadKey();
-                Console.WriteLine(Stopped);
             }
+            Console.WriteLine("Server stopped.");
         }
     }
 }
