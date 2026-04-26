@@ -22,10 +22,10 @@ namespace tt.Client
         {
             _context = new TestingDbContext();
 
-            AuthenticationService = new AuthenticationService(_context);
-            TestService = new TestService(_context);
-            QuestionService = new QuestionService(_context);
-            TestAttemptService = new TestAttemptService(_context);
+            AuthenticationService = new IAuthenticationService(_context);
+            TestService = new ITestService(_context);
+            QuestionService = new IQuestionService(_context);
+            TestAttemptService = new ITestAttemptService(_context);
             UserService = new UserService(_context);
         }
 
