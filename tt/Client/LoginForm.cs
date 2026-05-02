@@ -1,4 +1,5 @@
 using tt.Client;
+using tt.Server;
 
 namespace tt.UI
 {
@@ -126,31 +127,25 @@ namespace tt.UI
 
     public partial class LoginForm : Form
     {
-        private readonly NetworkServiceContainer _serviceContainer;
+        private NetworkServiceContainer? _serviceContainer;
 
         private TextBox txtUsername;
         private TextBox txtPassword;
+        private TextBox txtServerAddress;
+        private RadioButton rbHost;
+        private RadioButton rbClient;
         private Button btnLogin;
         private Button btnRegister;
 
         public LoginForm()
         {
             InitializeComponent();
-            try
-            {
-                _serviceContainer = new NetworkServiceContainer("127.0.0.1", 9000);
-            }
-            catch
-            {
-                MessageBox.Show("Невозможно подключиться к серверу.");
-                Application.Exit();
-            }
         }
 
         private void InitializeComponent()
         {
             Text = "System Login";
-            Width = 400;
+            Width = 450;
             Height = 300;
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -158,17 +153,34 @@ namespace tt.UI
             MinimizeBox = false;
             txtUsername = new TextBox();
             txtPassword = new TextBox();
+            txtServerAddress = new TextBox();
+            rbHost = new RadioButton();
+            rbClient = new RadioButton();
             txtUsername.Location = new Point(140, 47);
             txtPassword.Location = new Point(140, 76);
+            txtServerAddress.Location = new Point(140, 134);
             txtPassword.UseSystemPasswordChar = true;
             btnLogin = new Button();
             btnRegister = new Button();
+            rbHost.Location = new Point(140, 18);
+            rbHost.Text = "Host";
+            rbClient.Location = new Point(270, 18);
+            rbClient.Text = "Client";
+            rbClient.Checked = true;
+            txtServerAddress.Width = 130;
+            txtServerAddress.Text = "192.168.0.6";
+            //txtServerAddress.Text = "127.0.0.1";
             Controls.Add(txtUsername);
             Controls.Add(txtPassword);
+            Controls.Add(txtServerAddress);
+            Controls.Add(rbHost);
+            Controls.Add(rbClient);
             Controls.Add(btnLogin);
             Controls.Add(btnRegister);
             btnLogin.Click += BtnLogin_Click;
             btnRegister.Click += BtnRegister_Click;
+            rbHost.CheckedChanged += ModeChanged;
+            rbClient.CheckedChanged += ModeChanged;
             AcceptButton = btnLogin;
             btnLogin.Location = new Point(140, 105);
             btnLogin.Height = 23;
@@ -178,6 +190,46 @@ namespace tt.UI
             btnRegister.Height = 23;
             btnRegister.Width = 100;
             btnRegister.Text = "Регистрация";
+            btnLogin.Top = 163;
+            txtServerAddress.Top = 192;
+            btnRegister.Top = 221;
+            ModeChanged(this, EventArgs.Empty);
+        }
+
+        private void ModeChanged(object? sender, EventArgs e)
+        {
+            txtServerAddress.Enabled = rbClient.Checked;
+        }
+
+        private async Task<bool> EnsureConnected()
+        {
+            if (_serviceContainer != null)
+                return true;
+
+            try
+            {
+                const int port = 9000;
+                var address = rbHost.Checked ? "127.0.0.1" : txtServerAddress.Text.Trim();
+
+                if (string.IsNullOrWhiteSpace(address))
+                {
+                    ShowError("Enter a server address.");
+                    return false;
+                }
+
+                if (rbHost.Checked)
+                    EmbeddedServerHost.EnsureStarted(port);
+
+                await Task.Delay(500);
+
+                _serviceContainer = await NetworkServiceContainer.CreateAsync(address, port);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ShowError($"Connection error: {ex.Message}");
+                return false;
+            }
         }
 
         private async void BtnLogin_Click(object sender, EventArgs e)
@@ -196,6 +248,10 @@ namespace tt.UI
                 ShowError("Введите пароль");
                 return;
             }
+            if (!await EnsureConnected())
+            {
+                return;
+            }
 
             ToggleControls(false);
             Cursor = Cursors.WaitCursor;
@@ -211,7 +267,9 @@ namespace tt.UI
                     return;
                 }
 
-                new TestSelectionForm(user).Show();
+                var selectionForm = new TestSelectionForm(user, _serviceContainer!);
+                this.Hide();
+                selectionForm.ShowDialog();
                 this.Close();
             }
             catch (Exception ex)
@@ -230,11 +288,14 @@ namespace tt.UI
             MessageBox.Show($"{message}", "Ошибка");
         }
 
-        private void BtnRegister_Click(object sender, EventArgs e)
+        private async void BtnRegister_Click(object sender, EventArgs e)
         {
+            if (!await EnsureConnected())
+                return;
+
             try
             {
-                var form = new RegistrationForm(_serviceContainer);
+                var form = new RegistrationForm(_serviceContainer!);
                 if (form.ShowDialog() == DialogResult.OK)
                 {
                     txtUsername.Text = form.RegisteredUsername;
@@ -243,7 +304,7 @@ namespace tt.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Не удалось открыть меню регистрации: " + ex.Message);
+                MessageBox.Show("Error opening registration: " + ex.Message);
             }
         }
 
@@ -253,6 +314,27 @@ namespace tt.UI
             txtPassword.Enabled = enabled;
             btnLogin.Enabled = enabled;
             btnRegister.Enabled = enabled;
+        }
+
+        private static class EmbeddedServerHost
+        {
+            private static readonly object Sync = new object();
+            private static bool _started;
+
+            public static void EnsureStarted(int port)
+            {
+                lock (Sync)
+                {
+                    if (_started)
+                    {
+                        return;
+                    }
+
+                    var server = new TcpServer(port);
+                    _ = Task.Run(() => server.StartAsync());
+                    _started = true;
+                }
+            }
         }
     }
 }

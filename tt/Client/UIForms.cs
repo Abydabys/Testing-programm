@@ -1,6 +1,5 @@
-// ============================================================================
 // TestSelectionForm.cs
-// ============================================================================
+
 using tt.Client;
 using tt.Models;
 
@@ -14,18 +13,10 @@ namespace tt.UI
         private Label lblWelcome;
         private readonly Models.User _currentUser;
 
-        public TestSelectionForm(Models.User user)
+        public TestSelectionForm(Models.User user, NetworkServiceContainer serviceContainer)
         {
             InitializeComponent();
-            try
-            {
-                _serviceContainer = new NetworkServiceContainer();
-            }
-            catch
-            {
-                MessageBox.Show("Cannot connect to server.");
-                this.Close();
-            }
+            _serviceContainer = serviceContainer;
             _currentUser = user;
         }
 
@@ -46,15 +37,16 @@ namespace tt.UI
             // 
             // btnStartTest
             // 
-            btnStartTest.Location = new Point(0, 0);
+            btnStartTest.Location = new Point(300, 400);
             btnStartTest.Name = "btnStartTest";
             btnStartTest.Size = new Size(75, 23);
             btnStartTest.TabIndex = 0;
             btnStartTest.Click += BtnStartTest_Click;
+            btnStartTest.Text = "Start Test";
             // 
             // lblWelcome
             // 
-            lblWelcome.Location = new Point(0, 0);
+            lblWelcome.Location = new Point(300, 50);
             lblWelcome.Name = "lblWelcome";
             lblWelcome.Size = new Size(100, 23);
             lblWelcome.TabIndex = 0;
@@ -63,6 +55,8 @@ namespace tt.UI
             // 
             ClientSize = new Size(784, 561);
             Controls.Add(dataGridView);
+            Controls.Add(btnStartTest);
+            Controls.Add(lblWelcome);
             Name = "TestSelectionForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Available Tests";
@@ -73,53 +67,68 @@ namespace tt.UI
 
         private async void TestSelectionForm_Load(object sender, EventArgs e)
         {
-            Label lblWelcome = this.Controls.Find("lblWelcome", true).FirstOrDefault() as Label;
-            lblWelcome.Text = $"Welcome, {_currentUser.FullName}!";
-            var tests = await _serviceContainer.TestService.GetAllPublishedTestsAsync();
-
+            try
+            {
+                lblWelcome.Text = $"Welcome, {_currentUser.FullName}!";
+                var tests = await _serviceContainer.TestService.GetAllPublishedTestsAsync();
+                dataGridView.DataSource = tests.ToList();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to load tests: {ex.Message}", "Error");
+                this.Close();
+            }
         }
 
         private async void BtnStartTest_Click(object sender, EventArgs e)
         {
-            DataGridView dgvTests = this.Controls.Find("dgvTests", true).FirstOrDefault() as DataGridView;
-            if (dgvTests.SelectedRows.Count == 0)
+            try
             {
-                MessageBox.Show("Please select a test first.");
-                return;
-            }
+                if (dataGridView.SelectedRows.Count == 0)
+                {
+                    MessageBox.Show("Please select a test first.");
+                    return;
+                }
 
-            int testId = (int)dgvTests.SelectedRows[0].Cells["Id"].Value;
-            _serviceContainer.TestAttemptService.CanUserAttemptTestAsync(_currentUser.Id, testId).ContinueWith(canAttemptTask =>
-            {
-                if (!canAttemptTask.Result)
+                int testId = (int)dataGridView.SelectedRows[0].Cells["Id"].Value;
+
+                bool canAttempt = await _serviceContainer.TestAttemptService
+                    .CanUserAttemptTestAsync(_currentUser.Id, testId);
+
+                MessageBox.Show($"CanAttempt: {canAttempt}, UserId: {_currentUser.Id}, TestId: {testId}");
+
+                if (!canAttempt)
                 {
                     MessageBox.Show("You have used all available attempts.");
                     return;
                 }
 
-                _serviceContainer.TestAttemptService.StartTestAsync(_currentUser.Id, testId).ContinueWith(startTestTask =>
+                var attempt = await _serviceContainer.TestAttemptService
+                    .StartTestAsync(_currentUser.Id, testId);
+
+                MessageBox.Show($"Attempt: {(attempt == null ? "NULL" : attempt.Id.ToString())}");
+
+                if (attempt == null)
                 {
-                    var attempt = startTestTask.Result;
-                    if (attempt == null)
-                    {
-                        MessageBox.Show("Failed to start the test.");
-                        return;
-                    }
+                    MessageBox.Show("Failed to start the test.");
+                    return;
+                }
 
-                    TestingForm testingForm = new TestingForm(_currentUser, attempt);
-                    testingForm.Show();
-                    this.Close();
-                });
-            });
-
-
+                var testingForm = new TestingForm(_currentUser, attempt, _serviceContainer);
+                this.Hide();
+                testingForm.ShowDialog();
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Exception: {ex.Message}\n\n{ex.StackTrace}");
+            }
         }
     }
 }
 
-// ============================================================================
 // TestingForm.cs
-// ============================================================================
+
 namespace tt.UI
 {
     public partial class TestingForm : Form
@@ -130,20 +139,10 @@ namespace tt.UI
         private List<Models.Question> _questions;
         private int _currentQuestionIndex = 0;
 
-        public TestingForm(Models.User user, Models.TestAttempt testAttempt)
+        public TestingForm(Models.User user, Models.TestAttempt testAttempt, Client.NetworkServiceContainer serviceContainer)
         {
             InitializeComponent();
-            try
-            {
-                _serviceContainer = new Client.NetworkServiceContainer("127.0.0.1", 9000);
-            }
-            catch
-            {
-                MessageBox.Show("Cannot connect to server.");
-                this.Close();
-                return;
-            }
-
+            _serviceContainer = serviceContainer;
             _currentUser = user;
             _testAttempt = testAttempt;
         }
@@ -162,20 +161,65 @@ namespace tt.UI
             Width = 1000;
             Height = 700;
             StartPosition = FormStartPosition.CenterScreen;
-            lblQuestion = new Label();
-            picQuestion = new PictureBox();
-            pnlAnswers = new Panel();
-            lblProgress = new Label();
-            btnPrevious = new Button();
-            btnNext = new Button();
-            btnFinish = new Button();
+
+            lblProgress = new Label
+            {
+                Location = new Point(20, 20),
+                Size = new Size(940, 25),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+
+            lblQuestion = new Label
+            {
+                Location = new Point(20, 55),
+                Size = new Size(940, 60),
+                Font = new Font("Segoe UI", 11)
+            };
+
+            picQuestion = new PictureBox
+            {
+                Location = new Point(20, 125),
+                Size = new Size(400, 200),
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Visible = false
+            };
+
+            pnlAnswers = new Panel
+            {
+                Location = new Point(20, 135),
+                Size = new Size(940, 400),
+                AutoScroll = true
+            };
+
+            btnPrevious = new Button
+            {
+                Text = "Previous",
+                Location = new Point(20, 610),
+                Size = new Size(100, 35)
+            };
+
+            btnNext = new Button
+            {
+                Text = "Next",
+                Location = new Point(130, 610),
+                Size = new Size(100, 35)
+            };
+
+            btnFinish = new Button
+            {
+                Text = "Finish Test",
+                Location = new Point(860, 610),
+                Size = new Size(110, 35)
+            };
+
+            Controls.Add(lblProgress);
             Controls.Add(lblQuestion);
             Controls.Add(picQuestion);
             Controls.Add(pnlAnswers);
-            Controls.Add(lblProgress);
             Controls.Add(btnPrevious);
             Controls.Add(btnNext);
             Controls.Add(btnFinish);
+
             Load += TestingForm_Load;
             btnNext.Click += BtnNext_Click;
             btnPrevious.Click += BtnPrevious_Click;
@@ -189,14 +233,13 @@ namespace tt.UI
                 var questions = await _serviceContainer
                     .QuestionService
                     .GetQuestionsByTestIdAsync(_testAttempt.TestId);
-
                 _questions = questions.ToList();
-
+                MessageBox.Show($"Loaded {_questions.Count} questions, TestId: {_testAttempt.TestId}");
                 DisplayQuestion(0);
             }
-            catch
+            catch (Exception ex)
             {
-                MessageBox.Show("Failed to load questions.");
+                MessageBox.Show($"Failed to load questions: {ex.Message}");
                 this.Close();
             }
         }
@@ -258,6 +301,7 @@ namespace tt.UI
 
         private async Task SaveAnswer()
         {
+            if (_questions == null || _currentQuestionIndex >= _questions.Count) return;
             var q = _questions[_currentQuestionIndex];
 
             var selected = pnlAnswers.Controls
@@ -322,9 +366,8 @@ namespace tt.UI
     }
 }
 
-// ============================================================================
 // ResultsForm.cs
-// ============================================================================
+
 namespace tt.UI
 {
     public partial class ResultsForm : Form
@@ -343,10 +386,19 @@ namespace tt.UI
             Width = 600;
             Height = 500;
             StartPosition = FormStartPosition.CenterScreen;
-            Button btnClose = new Button();
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            MaximizeBox = false;
+
+            Button btnClose = new Button
+            {
+                Text = "Close",
+                Location = new Point(225, 380),
+                Size = new Size(120, 40),
+                Font = new Font("Segoe UI", 10)
+            };
             btnClose.Click += BtnClose_Click;
-            Load += ResultsForm_Load;
             Controls.Add(btnClose);
+            Load += ResultsForm_Load;
         }
 
         private void ResultsForm_Load(object sender, EventArgs e)
@@ -357,30 +409,73 @@ namespace tt.UI
         private void DisplayResults()
         {
             double percent = _testAttempt.Percentage;
-
             string grade =
                 percent >= 90 ? "A" :
                 percent >= 75 ? "B" :
                 percent >= 60 ? "C" :
                 percent >= 50 ? "D" : "F";
 
-            Label lbl = new Label
+            Label lblTitle = new Label
             {
-                Left = 20,
-                Top = 50,
-                Width = 500,
-                Text = $"Score: {_testAttempt.Score}/{_testAttempt.MaxScore}\n" +
-                       $"Percentage: {percent:F2}%\n" +
-                       $"Grade: {grade}"
+                Text = "Test Results",
+                Location = new Point(20, 30),
+                Size = new Size(540, 40),
+                Font = new Font("Segoe UI", 18, FontStyle.Bold),
+                TextAlign = ContentAlignment.MiddleCenter
             };
 
-            this.Controls.Add(lbl);
+            Label lblScore = new Label
+            {
+                Text = $"Score:  {_testAttempt.Score} / {_testAttempt.MaxScore}",
+                Location = new Point(20, 110),
+                Size = new Size(540, 35),
+                Font = new Font("Segoe UI", 13),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+
+            Label lblPercent = new Label
+            {
+                Text = $"Percentage:  {percent:F2}%",
+                Location = new Point(20, 160),
+                Size = new Size(540, 35),
+                Font = new Font("Segoe UI", 13),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+
+            Label lblGrade = new Label
+            {
+                Text = $"Grade:  {grade}",
+                Location = new Point(20, 210),
+                Size = new Size(540, 60),
+                Font = new Font("Segoe UI", 28, FontStyle.Bold),
+                ForeColor = grade == "A" ? Color.Green :
+                            grade == "B" ? Color.DarkGreen :
+                            grade == "C" ? Color.DarkOrange :
+                            grade == "D" ? Color.Orange : Color.Red,
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+
+            Label lblMessage = new Label
+            {
+                Text = percent >= 60 ? "Congratulations, you passed!" : "Better luck next time!",
+                Location = new Point(20, 290),
+                Size = new Size(540, 35),
+                Font = new Font("Segoe UI", 11, FontStyle.Italic),
+                ForeColor = percent >= 60 ? Color.DarkGreen : Color.Red,
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+
+            Controls.Add(lblTitle);
+            Controls.Add(lblScore);
+            Controls.Add(lblPercent);
+            Controls.Add(lblGrade);
+            Controls.Add(lblMessage);
         }
 
         private void BtnClose_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.OK;
-                this.Close();
+            this.Close();
         }
     }
 }
