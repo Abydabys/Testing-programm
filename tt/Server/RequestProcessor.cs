@@ -6,70 +6,59 @@ using tt.Shared;
 
 namespace tt.Server
 {
-    /// <summary>
-    /// Receives a NetworkMessage from ClientHandler, identifies the MessageType,
-    /// calls the appropriate service method, and returns a NetworkMessage response.
-    ///
-    /// All database-touching code lives here (via the services).
-    /// The client never touches the database directly.
-    /// </summary>
+
     public class RequestProcessor
     {
-        // ── Fields ────────────────────────────────────────────────────────
-
         private readonly IAuthenticationService _authService;
-        private readonly ITestService _testService;
-        private readonly IQuestionService _questionService;
-        private readonly ITestAttemptService _testAttemptService;
-        private readonly UserService _userService;
-
-        // ── Constructor ───────────────────────────────────────────────────
+        private readonly ITestService           _testService;
+        private readonly IQuestionService       _questionService;
+        private readonly ITestAttemptService    _testAttemptService;
+        private readonly UserService            _userService;
 
         public RequestProcessor(TestingDbContext dbContext)
         {
-            _userService = new UserService(dbContext);
-            _authService = new IAuthenticationService(dbContext);
-            _testService = new ITestService(dbContext);
-            _questionService = new IQuestionService(dbContext);
+            _userService        = new UserService(dbContext);
+            _authService        = new IAuthenticationService(dbContext);
+            _testService        = new ITestService(dbContext);
+            _questionService    = new IQuestionService(dbContext);
             _testAttemptService = new ITestAttemptService(dbContext);
         }
 
-        // ── Dispatcher ────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Routes the message to the correct handler method based on MessageType.
-        /// Always returns a NetworkMessage — never throws to the caller.
-        /// </summary>
         public async Task<NetworkMessage> ProcessAsync(NetworkMessage request)
         {
             try
             {
                 return request.Type switch
                 {
-                    MessageType.Login                    => await HandleLoginAsync(request),
-                    MessageType.Register                 => await HandleRegisterAsync(request),
-                    MessageType.ValidateUser             => await HandleValidateUserAsync(request),
-                    MessageType.GetTestById              => await HandleGetTestByIdAsync(request),
-                    MessageType.GetAllPublishedTests     => await HandleGetAllPublishedTestsAsync(request),
-                    MessageType.CreateTest               => await HandleCreateTestAsync(request),
-                    MessageType.UpdateTest               => await HandleUpdateTestAsync(request),
-                    MessageType.PublishTest              => await HandlePublishTestAsync(request),
-                    MessageType.DeleteTest               => await HandleDeleteTestAsync(request),
-                    MessageType.GetQuestionById          => await HandleGetQuestionByIdAsync(request),
-                    MessageType.GetQuestionsByTestId     => await HandleGetQuestionsByTestIdAsync(request),
-                    MessageType.CreateQuestion           => await HandleCreateQuestionAsync(request),
-                    MessageType.UpdateQuestion           => await HandleUpdateQuestionAsync(request),
-                    MessageType.DeleteQuestion           => await HandleDeleteQuestionAsync(request),
-                    MessageType.UploadQuestionImage      => await HandleUploadQuestionImageAsync(request),
-                    MessageType.StartTest                => await HandleStartTestAsync(request),
-                    MessageType.GetTestAttemptById       => await HandleGetTestAttemptByIdAsync(request),
-                    MessageType.GetUserTestAttempts      => await HandleGetUserTestAttemptsAsync(request),
-                    MessageType.GetTestAttemptsForTest   => await HandleGetTestAttemptsForTestAsync(request),
-                    MessageType.SubmitAnswer             => await HandleSubmitAnswerAsync(request),
-                    MessageType.SubmitMultipleAnswers    => await HandleSubmitMultipleAnswersAsync(request),
-                    MessageType.CompleteTest             => await HandleCompleteTestAsync(request),
-                    MessageType.CanUserAttemptTest       => await HandleCanUserAttemptTestAsync(request),
-                    _                                    => NetworkMessage.CreateError(request.Type, "Unknown message type")
+                    MessageType.Login                   => await HandleLoginAsync(request),
+                    MessageType.Register                => await HandleRegisterAsync(request),
+                    MessageType.ValidateUser            => await HandleValidateUserAsync(request),
+
+                    MessageType.GetTestById             => await HandleGetTestByIdAsync(request),
+                    MessageType.GetAllPublishedTests    => await HandleGetAllPublishedTestsAsync(request),
+                    MessageType.GetAllTests             => await HandleGetAllTestsAsync(request),
+                    MessageType.CreateTest              => await HandleCreateTestAsync(request),
+                    MessageType.UpdateTest              => await HandleUpdateTestAsync(request),
+                    MessageType.PublishTest             => await HandlePublishTestAsync(request),
+                    MessageType.DeleteTest              => await HandleDeleteTestAsync(request),
+
+                    MessageType.GetQuestionById         => await HandleGetQuestionByIdAsync(request),
+                    MessageType.GetQuestionsByTestId    => await HandleGetQuestionsByTestIdAsync(request),
+                    MessageType.CreateQuestion          => await HandleCreateQuestionAsync(request),
+                    MessageType.UpdateQuestion          => await HandleUpdateQuestionAsync(request),
+                    MessageType.DeleteQuestion          => await HandleDeleteQuestionAsync(request),
+                    MessageType.UploadQuestionImage     => await HandleUploadQuestionImageAsync(request),
+
+                    MessageType.StartTest               => await HandleStartTestAsync(request),
+                    MessageType.GetTestAttemptById      => await HandleGetTestAttemptByIdAsync(request),
+                    MessageType.GetUserTestAttempts     => await HandleGetUserTestAttemptsAsync(request),
+                    MessageType.GetTestAttemptsForTest  => await HandleGetTestAttemptsForTestAsync(request),
+                    MessageType.SubmitAnswer            => await HandleSubmitAnswerAsync(request),
+                    MessageType.SubmitMultipleAnswers   => await HandleSubmitMultipleAnswersAsync(request),
+                    MessageType.CompleteTest            => await HandleCompleteTestAsync(request),
+                    MessageType.CanUserAttemptTest      => await HandleCanUserAttemptTestAsync(request),
+
+                    _ => NetworkMessage.CreateError(request.Type, "Unknown message type")
                 };
             }
             catch (Exception ex)
@@ -78,12 +67,12 @@ namespace tt.Server
             }
         }
 
-        // ── Authentication handlers ───────────────────────────────────────
+
 
         private async Task<NetworkMessage> HandleLoginAsync(NetworkMessage request)
         {
             var payload = request.GetPayload<LoginRequest>();
-            var user = await _authService.LoginAsync(payload.Username, payload.Password);
+            var user    = await _authService.LoginAsync(payload.Username, payload.Password);
             if (user == null)
                 return NetworkMessage.CreateError(MessageType.Login, "Invalid credentials");
             return new NetworkMessage(MessageType.Login, user) { Success = true };
@@ -92,7 +81,7 @@ namespace tt.Server
         private async Task<NetworkMessage> HandleRegisterAsync(NetworkMessage request)
         {
             var payload = request.GetPayload<RegisterRequest>();
-            var result = await _authService.RegisterAsync(payload.Username, payload.Password, payload.FullName);
+            var result  = await _authService.RegisterAsync(payload.Username, payload.Password, payload.FullName);
             if (!result)
                 return NetworkMessage.CreateError(MessageType.Register, "Username already taken");
             return new NetworkMessage { Type = MessageType.Register, Success = true };
@@ -100,17 +89,17 @@ namespace tt.Server
 
         private async Task<NetworkMessage> HandleValidateUserAsync(NetworkMessage request)
         {
-            var user = request.GetPayload<User>();
+            var user   = request.GetPayload<User>();
             var result = await _authService.ValidateUserAsync(user);
             return new NetworkMessage(MessageType.ValidateUser, result) { Success = true };
         }
 
-        // ── Test handlers ─────────────────────────────────────────────────
+
 
         private async Task<NetworkMessage> HandleGetTestByIdAsync(NetworkMessage request)
         {
             var payload = request.GetPayload<IdRequest>();
-            var test = await _testService.GetTestByIdAsync(payload.Id);
+            var test    = await _testService.GetTestByIdAsync(payload.Id);
             if (test == null)
                 return NetworkMessage.CreateError(MessageType.GetTestById, "Test not found");
             return new NetworkMessage(MessageType.GetTestById, test) { Success = true };
@@ -122,9 +111,16 @@ namespace tt.Server
             return new NetworkMessage(MessageType.GetAllPublishedTests, tests) { Success = true };
         }
 
+
+        private async Task<NetworkMessage> HandleGetAllTestsAsync(NetworkMessage request)
+        {
+            var tests = await _testService.GetAllTestsAsync();
+            return new NetworkMessage(MessageType.GetAllTests, tests) { Success = true };
+        }
+
         private async Task<NetworkMessage> HandleCreateTestAsync(NetworkMessage request)
         {
-            var test = request.GetPayload<Test>();
+            var test   = request.GetPayload<Test>();
             var result = await _testService.CreateTestAsync(test);
             if (!result)
                 return NetworkMessage.CreateError(MessageType.CreateTest, "Failed to create test");
@@ -133,7 +129,7 @@ namespace tt.Server
 
         private async Task<NetworkMessage> HandleUpdateTestAsync(NetworkMessage request)
         {
-            var test = request.GetPayload<Test>();
+            var test   = request.GetPayload<Test>();
             var result = await _testService.UpdateTestAsync(test);
             if (!result)
                 return NetworkMessage.CreateError(MessageType.UpdateTest, "Test not found or update failed");
@@ -143,7 +139,7 @@ namespace tt.Server
         private async Task<NetworkMessage> HandlePublishTestAsync(NetworkMessage request)
         {
             var payload = request.GetPayload<IdRequest>();
-            var result = await _testService.PublishTestAsync(payload.Id);
+            var result  = await _testService.PublishTestAsync(payload.Id);
             if (!result)
                 return NetworkMessage.CreateError(MessageType.PublishTest, "Test not found or publish failed");
             return new NetworkMessage { Type = MessageType.PublishTest, Success = true };
@@ -152,17 +148,17 @@ namespace tt.Server
         private async Task<NetworkMessage> HandleDeleteTestAsync(NetworkMessage request)
         {
             var payload = request.GetPayload<IdRequest>();
-            var result = await _testService.DeleteTestAsync(payload.Id);
+            var result  = await _testService.DeleteTestAsync(payload.Id);
             if (!result)
                 return NetworkMessage.CreateError(MessageType.DeleteTest, "Test not found or delete failed");
             return new NetworkMessage { Type = MessageType.DeleteTest, Success = true };
         }
 
-        // ── Question handlers ─────────────────────────────────────────────
+
 
         private async Task<NetworkMessage> HandleGetQuestionByIdAsync(NetworkMessage request)
         {
-            var payload = request.GetPayload<IdRequest>();
+            var payload  = request.GetPayload<IdRequest>();
             var question = await _questionService.GetQuestionByIdAsync(payload.Id);
             if (question == null)
                 return NetworkMessage.CreateError(MessageType.GetQuestionById, "Question not found");
@@ -171,7 +167,7 @@ namespace tt.Server
 
         private async Task<NetworkMessage> HandleGetQuestionsByTestIdAsync(NetworkMessage request)
         {
-            var payload = request.GetPayload<IdRequest>();
+            var payload   = request.GetPayload<IdRequest>();
             var questions = await _questionService.GetQuestionsByTestIdAsync(payload.Id);
             return new NetworkMessage(MessageType.GetQuestionsByTestId, questions) { Success = true };
         }
@@ -179,7 +175,7 @@ namespace tt.Server
         private async Task<NetworkMessage> HandleCreateQuestionAsync(NetworkMessage request)
         {
             var question = request.GetPayload<Question>();
-            var result = await _questionService.CreateQuestionAsync(question);
+            var result   = await _questionService.CreateQuestionAsync(question);
             if (!result)
                 return NetworkMessage.CreateError(MessageType.CreateQuestion, "Failed to create question");
             return new NetworkMessage(MessageType.CreateQuestion, question) { Success = true };
@@ -188,7 +184,7 @@ namespace tt.Server
         private async Task<NetworkMessage> HandleUpdateQuestionAsync(NetworkMessage request)
         {
             var question = request.GetPayload<Question>();
-            var result = await _questionService.UpdateQuestionAsync(question);
+            var result   = await _questionService.UpdateQuestionAsync(question);
             if (!result)
                 return NetworkMessage.CreateError(MessageType.UpdateQuestion, "Question not found or update failed");
             return new NetworkMessage { Type = MessageType.UpdateQuestion, Success = true };
@@ -197,7 +193,7 @@ namespace tt.Server
         private async Task<NetworkMessage> HandleDeleteQuestionAsync(NetworkMessage request)
         {
             var payload = request.GetPayload<IdRequest>();
-            var result = await _questionService.DeleteQuestionAsync(payload.Id);
+            var result  = await _questionService.DeleteQuestionAsync(payload.Id);
             if (!result)
                 return NetworkMessage.CreateError(MessageType.DeleteQuestion, "Question not found or delete failed");
             return new NetworkMessage { Type = MessageType.DeleteQuestion, Success = true };
@@ -205,15 +201,14 @@ namespace tt.Server
 
         private async Task<NetworkMessage> HandleUploadQuestionImageAsync(NetworkMessage request)
         {
-            var payload = request.GetPayload<UploadImageRequest>();
+            var payload    = request.GetPayload<UploadImageRequest>();
             var imageBytes = Convert.FromBase64String(payload.ImageDataBase64);
-            var result = await _questionService.UploadQuestionImageAsync(payload.QuestionId, imageBytes, payload.MimeType);
+            var result     = await _questionService.UploadQuestionImageAsync(payload.QuestionId, imageBytes, payload.MimeType);
             if (!result)
                 return NetworkMessage.CreateError(MessageType.UploadQuestionImage, "Question not found or image upload failed");
             return new NetworkMessage { Type = MessageType.UploadQuestionImage, Success = true };
         }
 
-        // ── Test attempt handlers ─────────────────────────────────────────
 
         private async Task<NetworkMessage> HandleStartTestAsync(NetworkMessage request)
         {
@@ -235,14 +230,14 @@ namespace tt.Server
 
         private async Task<NetworkMessage> HandleGetUserTestAttemptsAsync(NetworkMessage request)
         {
-            var payload = request.GetPayload<IdRequest>();
+            var payload  = request.GetPayload<IdRequest>();
             var attempts = await _testAttemptService.GetUserTestAttemptsAsync(payload.Id);
             return new NetworkMessage(MessageType.GetUserTestAttempts, attempts) { Success = true };
         }
 
         private async Task<NetworkMessage> HandleGetTestAttemptsForTestAsync(NetworkMessage request)
         {
-            var payload = request.GetPayload<IdRequest>();
+            var payload  = request.GetPayload<IdRequest>();
             var attempts = await _testAttemptService.GetTestAttemptsForTestAsync(payload.Id);
             return new NetworkMessage(MessageType.GetTestAttemptsForTest, attempts) { Success = true };
         }
@@ -250,7 +245,7 @@ namespace tt.Server
         private async Task<NetworkMessage> HandleSubmitAnswerAsync(NetworkMessage request)
         {
             var payload = request.GetPayload<SubmitAnswerRequest>();
-            var result = await _testAttemptService.SubmitAnswerAsync(
+            var result  = await _testAttemptService.SubmitAnswerAsync(
                 payload.TestAttemptId, payload.QuestionId, payload.AnswerId);
             if (!result)
                 return NetworkMessage.CreateError(MessageType.SubmitAnswer, "Failed to submit answer");
@@ -260,7 +255,7 @@ namespace tt.Server
         private async Task<NetworkMessage> HandleSubmitMultipleAnswersAsync(NetworkMessage request)
         {
             var payload = request.GetPayload<SubmitMultipleAnswersRequest>();
-            var result = await _testAttemptService.SubmitMultipleAnswersAsync(
+            var result  = await _testAttemptService.SubmitMultipleAnswersAsync(
                 payload.TestAttemptId, payload.QuestionId, payload.AnswerIds);
             if (!result)
                 return NetworkMessage.CreateError(MessageType.SubmitMultipleAnswers, "Failed to submit answers");
@@ -279,12 +274,10 @@ namespace tt.Server
         private async Task<NetworkMessage> HandleCanUserAttemptTestAsync(NetworkMessage request)
         {
             var payload = request.GetPayload<UserTestRequest>();
-            var result = await _testAttemptService.CanUserAttemptTestAsync(payload.UserId, payload.TestId);
+            var result  = await _testAttemptService.CanUserAttemptTestAsync(payload.UserId, payload.TestId);
             return new NetworkMessage(MessageType.CanUserAttemptTest, result) { Success = true };
         }
     }
-
-    // ── Payload record types ──────────────────────────────────────────────
 
     record LoginRequest(string Username, string Password);
     record RegisterRequest(string Username, string Password, string FullName);
