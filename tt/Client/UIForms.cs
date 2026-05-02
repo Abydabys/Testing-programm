@@ -1,69 +1,66 @@
-// TestSelectionForm.cs
-
 using tt.Client;
 using tt.Models;
 
 namespace tt.UI
 {
+    //  Test Selection Form
+
     public partial class TestSelectionForm : Form
     {
         private readonly NetworkServiceContainer _serviceContainer;
-        private DataGridView dataGridView;
-        private Button btnStartTest;
-        private Label lblWelcome;
-        private readonly Models.User _currentUser;
+        private readonly Models.User             _currentUser;
+
+        private DataGridView dgvTests;
+        private Button       btnStartTest;
+        private Label        lblWelcome;
 
         public TestSelectionForm(Models.User user, NetworkServiceContainer serviceContainer)
         {
-            InitializeComponent();
             _serviceContainer = serviceContainer;
-            _currentUser = user;
+            _currentUser      = user;
+            InitializeComponent();
         }
 
         private void InitializeComponent()
         {
-            dataGridView = new DataGridView();
-            btnStartTest = new Button();
-            lblWelcome = new Label();
-            ((System.ComponentModel.ISupportInitialize)dataGridView).BeginInit();
-            SuspendLayout();
-            // 
-            // dataGridView
-            // 
-            dataGridView.Location = new Point(20, 60);
-            dataGridView.Name = "dataGridView";
-            dataGridView.Size = new Size(745, 350);
-            dataGridView.TabIndex = 0;
-            // 
-            // btnStartTest
-            // 
-            btnStartTest.Location = new Point(300, 450);
-            btnStartTest.Name = "btnStartTest";
-            btnStartTest.Size = new Size(160, 35);
-            btnStartTest.TabIndex = 0;
-            btnStartTest.Click += BtnStartTest_Click;
-            btnStartTest.Text = "Start Test";
-            // 
-            // lblWelcome
-            // 
-            lblWelcome.AutoSize = true;
-            lblWelcome.Location = new Point(20, 15);
-            lblWelcome.Name = "lblWelcome";
-            lblWelcome.TabIndex = 0;
-            lblWelcome.Font = new Font("Segoe UI", 18, FontStyle.Bold);
-            // 
-            // TestSelectionForm
-            // 
-            ClientSize = new Size(784, 561);
-            Controls.Add(dataGridView);
-            Controls.Add(btnStartTest);
-            Controls.Add(lblWelcome);
-            Name = "TestSelectionForm";
+            Text          = "Available Tests";
+            ClientSize    = new Size(800, 580);
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "Available Tests";
+
+            lblWelcome = new Label
+            {
+                Location  = new Point(20, 15),
+                Size      = new Size(760, 35),
+                Font      = new Font("Segoe UI", 16, FontStyle.Bold),
+                AutoSize  = false
+            };
+
+            dgvTests = new DataGridView
+            {
+                Location               = new Point(20, 60),
+                Size                   = new Size(760, 390),
+                ReadOnly               = true,
+                SelectionMode          = DataGridViewSelectionMode.FullRowSelect,
+                MultiSelect            = false,
+                AllowUserToAddRows     = false,
+                AllowUserToDeleteRows  = false,
+                AutoSizeColumnsMode    = DataGridViewAutoSizeColumnsMode.Fill
+            };
+
+            btnStartTest = new Button
+            {
+                Location  = new Point(310, 470),
+                Size      = new Size(180, 40),
+                Text      = "▶  Start Test",
+                Font      = new Font("Segoe UI", 11, FontStyle.Bold)
+            };
+            btnStartTest.Click += BtnStartTest_Click;
+
+            Controls.AddRange(new Control[] { lblWelcome, dgvTests, btnStartTest });
             Load += TestSelectionForm_Load;
-            ((System.ComponentModel.ISupportInitialize)dataGridView).EndInit();
-            ResumeLayout(false);
+
+            ((System.ComponentModel.ISupportInitialize)dgvTests).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)dgvTests).EndInit();
         }
 
         private async void TestSelectionForm_Load(object sender, EventArgs e)
@@ -72,12 +69,19 @@ namespace tt.UI
             {
                 lblWelcome.Text = $"Welcome, {_currentUser.FullName}!";
                 var tests = await _serviceContainer.TestService.GetAllPublishedTestsAsync();
-                dataGridView.DataSource = tests.ToList();
+
+                dgvTests.DataSource = tests.Select(t => new
+                {
+                    t.Id,
+                    t.Title,
+                    t.Description,
+                    t.MaxAttempts
+                }).ToList();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to load tests: {ex.Message}", "Error");
-                this.Close();
+                Close();
             }
         }
 
@@ -85,36 +89,24 @@ namespace tt.UI
         {
             try
             {
-                if (dataGridView.SelectedRows.Count == 0)
-                {
-                    MessageBox.Show("Please select a test first.");
-                    return;
-                }
+                if (dgvTests.SelectedRows.Count == 0) { MessageBox.Show("Please select a test first."); return; }
 
-                int testId = (int)dataGridView.SelectedRows[0].Cells["Id"].Value;
+                int testId = (int)dgvTests.SelectedRows[0].Cells["Id"].Value;
 
                 bool canAttempt = await _serviceContainer.TestAttemptService
                     .CanUserAttemptTestAsync(_currentUser.Id, testId);
 
-                if (!canAttempt)
-                {
-                    MessageBox.Show("You have used all available attempts.");
-                    return;
-                }
+                if (!canAttempt) { MessageBox.Show("You have used all available attempts for this test."); return; }
 
                 var attempt = await _serviceContainer.TestAttemptService
                     .StartTestAsync(_currentUser.Id, testId);
 
-                if (attempt == null)
-                {
-                    MessageBox.Show("Failed to start the test.");
-                    return;
-                }
+                if (attempt == null) { MessageBox.Show("Failed to start the test."); return; }
 
                 var testingForm = new TestingForm(_currentUser, attempt, _serviceContainer);
-                this.Hide();
+                Hide();
                 testingForm.ShowDialog();
-                this.Close();
+                Close();
             }
             catch (Exception ex)
             {
@@ -122,356 +114,328 @@ namespace tt.UI
             }
         }
     }
-}
 
-// TestingForm.cs
+    //  Testing Form
 
-namespace tt.UI
-{
     public partial class TestingForm : Form
     {
-        private readonly Client.NetworkServiceContainer _serviceContainer;
-        private readonly Models.User _currentUser;
-        private readonly Models.TestAttempt _testAttempt;
-        private List<Models.Question> _questions;
+        private readonly NetworkServiceContainer _serviceContainer;
+        private readonly Models.User             _currentUser;
+        private readonly Models.TestAttempt      _testAttempt;
+
+        private List<Models.Question> _questions = new();
         private int _currentQuestionIndex = 0;
 
-        public TestingForm(Models.User user, Models.TestAttempt testAttempt, Client.NetworkServiceContainer serviceContainer)
-        {
-            InitializeComponent();
-            _serviceContainer = serviceContainer;
-            _currentUser = user;
-            _testAttempt = testAttempt;
-        }
-
-        private Label lblQuestion;
-        private Panel pnlAnswers;
+        private Label      lblProgress;
+        private Label      lblQuestion;
         private PictureBox picQuestion;
-        private Label lblProgress;
-        private Button btnNext;
-        private Button btnPrevious;
-        private Button btnFinish;
+        private Panel      pnlAnswers;
+        private Button     btnPrevious;
+        private Button     btnNext;
+        private Button     btnFinish;
+
+        public TestingForm(Models.User user, Models.TestAttempt testAttempt, NetworkServiceContainer serviceContainer)
+        {
+            _serviceContainer = serviceContainer;
+            _currentUser      = user;
+            _testAttempt      = testAttempt;
+            InitializeComponent();
+        }
 
         private void InitializeComponent()
         {
-            Text = "Test Taking";
-            Width = 1000;
-            Height = 700;
+            Text          = "Test Taking";
+            ClientSize    = new Size(1000, 680);
             StartPosition = FormStartPosition.CenterScreen;
 
-            lblProgress = new Label
-            {
-                Location = new Point(20, 20),
-                Size = new Size(940, 25),
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
-
-            lblQuestion = new Label
-            {
-                Location = new Point(20, 55),
-                Size = new Size(940, 60),
-                Font = new Font("Segoe UI", 11)
-            };
+            lblProgress = new Label { Location = new Point(20, 20), Size = new Size(960, 25), Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+            lblQuestion = new Label { Location = new Point(20, 55), Size = new Size(960, 65), Font = new Font("Segoe UI", 11), AutoEllipsis = true };
 
             picQuestion = new PictureBox
             {
                 Location = new Point(20, 125),
-                Size = new Size(400, 200),
+                Size     = new Size(400, 200),
                 SizeMode = PictureBoxSizeMode.Zoom,
-                Visible = false
+                Visible  = false,
+                BorderStyle = BorderStyle.FixedSingle
             };
 
             pnlAnswers = new Panel
             {
-                Location = new Point(20, 135),
-                Size = new Size(940, 400),
+                Location   = new Point(20, 140),
+                Size       = new Size(960, 490),
                 AutoScroll = true
             };
 
-            btnPrevious = new Button
+            btnPrevious = new Button { Text = "◀ Previous", Location = new Point(20,  615), Size = new Size(120, 35) };
+            btnNext     = new Button { Text = "Next ▶",     Location = new Point(150, 615), Size = new Size(120, 35) };
+            btnFinish   = new Button
             {
-                Text = "Previous",
-                Location = new Point(20, 610),
-                Size = new Size(100, 35)
+                Text      = "Finish Test",
+                Location  = new Point(860, 615),
+                Size      = new Size(120, 35),
+                Font      = new Font("Segoe UI", 9, FontStyle.Bold),
+                BackColor = Color.FromArgb(220, 50, 50),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
             };
 
-            btnNext = new Button
-            {
-                Text = "Next",
-                Location = new Point(130, 610),
-                Size = new Size(100, 35)
-            };
-
-            btnFinish = new Button
-            {
-                Text = "Finish Test",
-                Location = new Point(860, 610),
-                Size = new Size(110, 35)
-            };
-
-            Controls.Add(lblProgress);
-            Controls.Add(lblQuestion);
-            Controls.Add(picQuestion);
-            Controls.Add(pnlAnswers);
-            Controls.Add(btnPrevious);
-            Controls.Add(btnNext);
-            Controls.Add(btnFinish);
-
-            Load += TestingForm_Load;
-            btnNext.Click += BtnNext_Click;
             btnPrevious.Click += BtnPrevious_Click;
-            btnFinish.Click += BtnFinish_Click;
+            btnNext.Click     += BtnNext_Click;
+            btnFinish.Click   += BtnFinish_Click;
+            Load += TestingForm_Load;
+
+            Controls.AddRange(new Control[] { lblProgress, lblQuestion, picQuestion, pnlAnswers, btnPrevious, btnNext, btnFinish });
         }
 
         private async void TestingForm_Load(object sender, EventArgs e)
         {
             try
             {
-                var questions = await _serviceContainer
-                    .QuestionService
+                var questions = await _serviceContainer.QuestionService
                     .GetQuestionsByTestIdAsync(_testAttempt.TestId);
                 _questions = questions.ToList();
+
+                if (_questions.Count == 0) { MessageBox.Show("This test has no questions."); Close(); return; }
                 DisplayQuestion(0);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to load questions: {ex.Message}");
-                this.Close();
+                Close();
             }
         }
+
         private void DisplayQuestion(int index)
         {
             if (index < 0 || index >= _questions.Count) return;
 
             var q = _questions[index];
-
             lblQuestion.Text = q.Text;
             pnlAnswers.Controls.Clear();
 
             if (q.ImageData != null && q.ImageData.Length > 0)
             {
-                using (var ms = new MemoryStream(q.ImageData))
-                {
-                    picQuestion.Image = Image.FromStream(ms);
-                    picQuestion.Visible = true;
-                }
+                using var ms = new MemoryStream(q.ImageData);
+                picQuestion.Image   = Image.FromStream(ms);
+                picQuestion.Visible = true;
+                pnlAnswers.Top      = picQuestion.Bottom + 10;
+                pnlAnswers.Height   = btnFinish.Top - pnlAnswers.Top - 10;
             }
             else
             {
                 picQuestion.Visible = false;
+                pnlAnswers.Top      = 140;
+                pnlAnswers.Height   = btnFinish.Top - 150;
             }
 
+            int y = 5;
             foreach (var answer in q.Answers)
             {
-                Control control;
-
+                Control ctrl;
                 if (q.Type == Models.QuestionType.SingleChoice)
-                {
-                    control = new RadioButton
-                    {
-                        Text = answer.Text,
-                        Tag = answer.Id,
-                        Top = pnlAnswers.Controls.Count * 30,
-                        Width = 800
-                    };
-                }
+                    ctrl = new RadioButton { Text = answer.Text, Tag = answer.Id, Location = new Point(5, y), Width = 900, AutoSize = false, Height = 30 };
                 else
-                {
-                    control = new CheckBox
-                    {
-                        Text = answer.Text,
-                        Tag = answer.Id,
-                        Top = pnlAnswers.Controls.Count * 30,
-                        Width = 800
-                    };
-                }
+                    ctrl = new CheckBox   { Text = answer.Text, Tag = answer.Id, Location = new Point(5, y), Width = 900, AutoSize = false, Height = 30 };
 
-                pnlAnswers.Controls.Add(control);
+                ctrl.Font = new Font("Segoe UI", 10);
+                pnlAnswers.Controls.Add(ctrl);
+                y += 36;
             }
 
-            lblProgress.Text = $"Question {index + 1} / {_questions.Count}";
-
+            lblProgress.Text    = $"Question {index + 1} / {_questions.Count}";
             btnPrevious.Enabled = index > 0;
-            btnNext.Enabled = index < _questions.Count - 1;
+            btnNext.Enabled     = index < _questions.Count - 1;
         }
 
-        private async Task SaveAnswer()
+        private async Task SaveCurrentAnswer()
         {
-            if (_questions == null || _currentQuestionIndex >= _questions.Count) return;
+            if (_currentQuestionIndex >= _questions.Count) return;
             var q = _questions[_currentQuestionIndex];
 
             var selected = pnlAnswers.Controls
                 .Cast<Control>()
-                .Where(c => (c is RadioButton rb && rb.Checked) ||
-                            (c is CheckBox cb && cb.Checked))
-                .Select(c => (int)c.Tag)
+                .Where(c => (c is RadioButton rb && rb.Checked) || (c is CheckBox cb && cb.Checked))
+                .Select(c => (int)c.Tag!)
                 .ToList();
 
             if (!selected.Any()) return;
 
             if (q.Type == Models.QuestionType.SingleChoice)
-            {
-                await _serviceContainer.TestAttemptService
-                    .SubmitAnswerAsync(_testAttempt.Id, q.Id, selected.First());
-            }
+                await _serviceContainer.TestAttemptService.SubmitAnswerAsync(_testAttempt.Id, q.Id, selected.First());
             else
-            {
-                await _serviceContainer.TestAttemptService
-                    .SubmitMultipleAnswersAsync(_testAttempt.Id, q.Id, selected);
-            }
+                await _serviceContainer.TestAttemptService.SubmitMultipleAnswersAsync(_testAttempt.Id, q.Id, selected);
         }
 
         private async void BtnNext_Click(object sender, EventArgs e)
         {
-            await SaveAnswer();
-            _currentQuestionIndex++;
-            DisplayQuestion(_currentQuestionIndex);
+            await SaveCurrentAnswer();
+            DisplayQuestion(++_currentQuestionIndex);
         }
 
         private async void BtnPrevious_Click(object sender, EventArgs e)
         {
-            _currentQuestionIndex--;
-            DisplayQuestion(_currentQuestionIndex);
+            DisplayQuestion(--_currentQuestionIndex);
         }
 
         private async void BtnFinish_Click(object sender, EventArgs e)
         {
-            var result = MessageBox.Show(
-            "Are you sure you want to finish?",
-            "Confirm",
-            MessageBoxButtons.YesNo);
-
-            if (result != DialogResult.Yes) return;
+            if (MessageBox.Show("Are you sure you want to finish the test?", "Confirm",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
 
             try
             {
-                await SaveAnswer();
+                await SaveCurrentAnswer();
 
-                var completed = await _serviceContainer
-                    .TestAttemptService
-                    .CompleteTestAsync(_testAttempt.Id);
+                var completed = await _serviceContainer.TestAttemptService.CompleteTestAsync(_testAttempt.Id);
+                if (completed == null) { MessageBox.Show("Failed to complete test. Please try again."); return; }
 
-                new ResultsForm(completed).ShowDialog();
-                this.Close();
+                using var rf = new ResultsForm(completed);
+                var result   = rf.ShowDialog();
+
+                if (result == DialogResult.Retry)
+                {
+                    var selectionForm = new TestSelectionForm(_currentUser, _serviceContainer);
+                    Hide();
+                    selectionForm.ShowDialog();
+                }
+
+                Close();
             }
-            catch
+            catch (Exception ex)
             {
-                MessageBox.Show("Failed to complete test.");
+                MessageBox.Show($"Error completing test: {ex.Message}");
             }
         }
     }
-}
 
-// ResultsForm.cs
+    //  Results Form
 
-namespace tt.UI
-{
     public partial class ResultsForm : Form
     {
-        private readonly Models.TestAttempt _testAttempt;
+        private readonly Models.TestAttempt _attempt;
 
         public ResultsForm(Models.TestAttempt testAttempt)
         {
+            _attempt = testAttempt;
             InitializeComponent();
-            _testAttempt = testAttempt;
         }
 
         private void InitializeComponent()
         {
-            Text = "Test Results";
-            Width = 600;
-            Height = 500;
-            StartPosition = FormStartPosition.CenterScreen;
+            Text            = "Test Results";
+            ClientSize      = new Size(600, 480);
+            StartPosition   = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedDialog;
-            MaximizeBox = false;
-
-            Button btnClose = new Button
-            {
-                Text = "Close",
-                Location = new Point(225, 380),
-                Size = new Size(120, 40),
-                Font = new Font("Segoe UI", 10)
-            };
-            btnClose.Click += BtnClose_Click;
-            Controls.Add(btnClose);
+            MaximizeBox     = false;
             Load += ResultsForm_Load;
         }
 
         private void ResultsForm_Load(object sender, EventArgs e)
         {
-            DisplayResults();
+            BuildResultsUI();
         }
 
-        private void DisplayResults()
+        private void BuildResultsUI()
         {
-            double percent = _testAttempt.Percentage;
-            string grade =
-                percent >= 90 ? "A" :
-                percent >= 75 ? "B" :
-                percent >= 60 ? "C" :
-                percent >= 50 ? "D" : "F";
+            double pct   = _attempt.Percentage;
+            string grade = pct >= 90 ? "A" : pct >= 75 ? "B" : pct >= 60 ? "C" : pct >= 50 ? "D" : "F";
+            bool   passed = pct >= 60;
 
-            Label lblTitle = new Label
+            Color gradeColor = grade switch
             {
-                Text = "Test Results",
-                Location = new Point(20, 30),
-                Size = new Size(540, 40),
-                Font = new Font("Segoe UI", 18, FontStyle.Bold),
+                "A" => Color.FromArgb(0, 160, 80),
+                "B" => Color.FromArgb(0, 130, 60),
+                "C" => Color.DarkOrange,
+                "D" => Color.Orange,
+                _   => Color.Crimson
+            };
+
+            var banner = new Panel { Location = new Point(0, 0), Size = new Size(600, 100),
+                BackColor = passed ? Color.FromArgb(20, 160, 80) : Color.FromArgb(180, 40, 40) };
+
+            var lblTitle = new Label
+            {
+                Text      = "Test Results",
+                ForeColor = Color.White,
+                Font      = new Font("Segoe UI", 22, FontStyle.Bold),
+                Location  = new Point(0, 20),
+                Size      = new Size(600, 50),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            banner.Controls.Add(lblTitle);
+
+            var lblScore = new Label
+            {
+                Text      = $"Score:   {_attempt.Score} / {_attempt.MaxScore}",
+                Location  = new Point(0, 115), Size = new Size(600, 36),
+                Font      = new Font("Segoe UI", 13),
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
-            Label lblScore = new Label
+            var lblPct = new Label
             {
-                Text = $"Score:  {_testAttempt.Score} / {_testAttempt.MaxScore}",
-                Location = new Point(20, 110),
-                Size = new Size(540, 35),
-                Font = new Font("Segoe UI", 13),
+                Text      = $"Percentage:   {pct:F1}%",
+                Location  = new Point(0, 155), Size = new Size(600, 36),
+                Font      = new Font("Segoe UI", 13),
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
-            Label lblPercent = new Label
+            var lblGrade = new Label
             {
-                Text = $"Percentage:  {percent:F2}%",
-                Location = new Point(20, 160),
-                Size = new Size(540, 35),
-                Font = new Font("Segoe UI", 13),
+                Text      = grade,
+                Location  = new Point(0, 195), Size = new Size(600, 80),
+                Font      = new Font("Segoe UI", 52, FontStyle.Bold),
+                ForeColor = gradeColor,
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
-            Label lblGrade = new Label
+            var lblMsg = new Label
             {
-                Text = $"Grade:  {grade}",
-                Location = new Point(20, 210),
-                Size = new Size(540, 60),
-                Font = new Font("Segoe UI", 28, FontStyle.Bold),
-                ForeColor = grade == "A" ? Color.Green :
-                            grade == "B" ? Color.DarkGreen :
-                            grade == "C" ? Color.DarkOrange :
-                            grade == "D" ? Color.Orange : Color.Red,
+                Text      = passed ? "🎉  Congratulations, you passed!" : "💪  Better luck next time!",
+                Location  = new Point(0, 280), Size = new Size(600, 36),
+                Font      = new Font("Segoe UI", 11, FontStyle.Italic),
+                ForeColor = passed ? Color.DarkGreen : Color.Crimson,
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
-            Label lblMessage = new Label
+            //Buttons 
+
+            var btnAnotherTest = new Button
             {
-                Text = percent >= 60 ? "Congratulations, you passed!" : "Better luck next time!",
-                Location = new Point(20, 290),
-                Size = new Size(540, 35),
-                Font = new Font("Segoe UI", 11, FontStyle.Italic),
-                ForeColor = percent >= 60 ? Color.DarkGreen : Color.Red,
-                TextAlign = ContentAlignment.MiddleCenter
+                Text      = "Take Another Test",
+                Location  = new Point(80, 370),
+                Size      = new Size(180, 42),
+                Font      = new Font("Segoe UI", 10, FontStyle.Bold),
+                BackColor = Color.FromArgb(30, 120, 200),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnAnotherTest.FlatAppearance.BorderSize = 0;
+            btnAnotherTest.Click += (_, __) =>
+            {
+                DialogResult = DialogResult.Retry;   // TestingForm checks this
+                Close();
             };
 
-            Controls.Add(lblTitle);
-            Controls.Add(lblScore);
-            Controls.Add(lblPercent);
-            Controls.Add(lblGrade);
-            Controls.Add(lblMessage);
-        }
+            var btnExit = new Button
+            {
+                Text      = "Exit",
+                Location  = new Point(340, 370),
+                Size      = new Size(180, 42),
+                Font      = new Font("Segoe UI", 10),
+                FlatStyle = FlatStyle.Flat
+            };
+            btnExit.Click += (_, __) =>
+            {
+                DialogResult = DialogResult.Cancel;
+                Close();
+            };
 
-        private void BtnClose_Click(object sender, EventArgs e)
-        {
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            Controls.AddRange(new Control[]
+            {
+                banner, lblScore, lblPct, lblGrade, lblMsg, btnAnotherTest, btnExit
+            });
         }
     }
 }

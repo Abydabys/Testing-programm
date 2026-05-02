@@ -3,6 +3,7 @@ using tt.Server;
 
 namespace tt.UI
 {
+    //  Registration Form
     public class RegistrationForm : Form
     {
         private readonly NetworkServiceContainer _serviceContainer;
@@ -10,10 +11,10 @@ namespace tt.UI
         private TextBox txtUsername;
         private TextBox txtPassword;
         private TextBox txtFullName;
-        private Button btnRegister;
-        private Label lblUsername;
-        private Label lblPassword;
-        private Label lblFullname;
+        private Button  btnRegister;
+        private Label   lblUsername;
+        private Label   lblPassword;
+        private Label   lblFullname;
 
         public string RegisteredUsername { get; private set; }
 
@@ -25,73 +26,26 @@ namespace tt.UI
 
         private void InitializeComponent()
         {
-            txtUsername = new TextBox();
-            txtPassword = new TextBox();
-            txtFullName = new TextBox();
-            btnRegister = new Button();
-            lblUsername = new Label();
-            lblPassword = new Label();
-            lblFullname = new Label();
-            SuspendLayout();
-            // 
-            // txtUsername
-            // 
-            txtUsername.Location = new Point(142, 47);
-            txtUsername.Name = "txtUsername";
-            txtUsername.Size = new Size(160, 23);
-            txtUsername.TabIndex = 0;
-            // 
-            // txtPassword
-            // 
-            txtPassword.Location = new Point(142, 76);
-            txtPassword.Name = "txtPassword";
-            txtPassword.Size = new Size(160, 23);
-            txtPassword.TabIndex = 1;
-            txtPassword.UseSystemPasswordChar = true;
-            // 
-            // txtFullName
-            // 
-            txtFullName.Location = new Point(142, 105);
-            txtFullName.Name = "txtFullName";
-            txtFullName.Size = new Size(160, 23);
-            txtFullName.TabIndex = 2;
-            // 
-            // btnRegister
-            // 
-            btnRegister.Location = new Point(142, 134);
-            btnRegister.Name = "btnRegister";
-            btnRegister.Size = new Size(160, 35);
-            btnRegister.TabIndex = 3;
+            Text             = "Registration";
+            Width            = 400;
+            Height           = 280;
+            StartPosition    = FormStartPosition.CenterScreen;
+            FormBorderStyle  = FormBorderStyle.FixedDialog;
+            MaximizeBox      = false;
+
+            txtUsername  = new TextBox { Location = new Point(160, 50),  Size = new Size(180, 23) };
+            txtPassword  = new TextBox { Location = new Point(160, 82),  Size = new Size(180, 23), UseSystemPasswordChar = true };
+            txtFullName  = new TextBox { Location = new Point(160, 114), Size = new Size(180, 23) };
+
+            btnRegister  = new Button  { Location = new Point(160, 150), Size = new Size(180, 35), Text = "Register" };
             btnRegister.Click += BtnRegister_Click;
-            btnRegister.Text = "Register";
-            //
-            //Labels
-            //
-            lblUsername.Location = new Point(47, 50);
-            lblUsername.Text = "Username";
-            lblPassword.Location = new Point(47, 80);
-            lblPassword.Text = "Password";
-            lblFullname.Location = new Point(47, 110);
-            lblFullname.Text = "Full Name";
-            lblUsername.Font = new Font(lblUsername.Font, FontStyle.Bold);
-            lblPassword.Font = new Font(lblPassword.Font, FontStyle.Bold);
-            lblFullname.Font = new Font(lblFullname.Font, FontStyle.Bold);
-            Controls.Add(lblUsername);
-            Controls.Add(lblPassword);
-            Controls.Add(lblFullname);
-            // 
-            // RegistrationForm
-            // 
-            ClientSize = new Size(384, 261);
-            Controls.Add(txtUsername);
-            Controls.Add(txtPassword);
-            Controls.Add(txtFullName);
-            Controls.Add(btnRegister);
-            Name = "RegistrationForm";
-            StartPosition = FormStartPosition.CenterScreen;
-            Text = "Registration";
-            ResumeLayout(false);
-            PerformLayout();
+
+            lblUsername  = new Label { Location = new Point(30, 53),  Text = "Username",  Font = new Font(Font, FontStyle.Bold), AutoSize = true };
+            lblPassword  = new Label { Location = new Point(30, 85),  Text = "Password",  Font = new Font(Font, FontStyle.Bold), AutoSize = true };
+            lblFullname  = new Label { Location = new Point(30, 117), Text = "Full Name", Font = new Font(Font, FontStyle.Bold), AutoSize = true };
+
+            Controls.AddRange(new Control[] { lblUsername, lblPassword, lblFullname,
+                                              txtUsername, txtPassword, txtFullName, btnRegister });
         }
 
         private async void BtnRegister_Click(object sender, EventArgs e)
@@ -100,66 +54,47 @@ namespace tt.UI
             string password = txtPassword.Text;
             string fullName = txtFullName.Text.Trim();
 
-            if (string.IsNullOrEmpty(username))
-            {
-                ShowError("Enter username");
-                return;
-            }
-
-            if (string.IsNullOrEmpty(password))
-            {
-                ShowError("Enter password");
-                return;
-            }
-
-            if (string.IsNullOrEmpty(fullName))
-            {
-                ShowError("Enter fullname");
-                return;
-            }
+            if (string.IsNullOrEmpty(username)) { ShowError("Enter username"); return; }
+            if (string.IsNullOrEmpty(password)) { ShowError("Enter password"); return; }
+            if (string.IsNullOrEmpty(fullName)) { ShowError("Enter full name"); return; }
 
             try
             {
-                var success = await _serviceContainer
-                    .AuthenticationService
+                bool ok = await _serviceContainer.AuthenticationService
                     .RegisterAsync(username, password, fullName);
 
-                if (!success)
-                {
-                    ShowError("Registration failed.");
-                    return;
-                }
+                if (!ok) { ShowError("Username already taken."); return; }
 
                 RegisteredUsername = username;
-                this.DialogResult = DialogResult.OK;
-                this.Close();
+                DialogResult = DialogResult.OK;
+                Close();
             }
             catch (Exception ex)
             {
-                ShowError($"Error while registration {ex}");
+                ShowError($"Registration error: {ex.Message}");
             }
         }
 
-        private void ShowError(string msg)
-        {
-            MessageBox.Show($"{msg}", "Error");
-        }
+        private void ShowError(string msg) => MessageBox.Show(msg, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
+
+    //  Login Form
 
     public partial class LoginForm : Form
     {
         private NetworkServiceContainer? _serviceContainer;
 
-        private TextBox txtUsername;
-        private TextBox txtPassword;
-        private TextBox txtServerAddress;
+        private TextBox     txtUsername;
+        private TextBox     txtPassword;
+        private TextBox     txtServerAddress;
         private RadioButton rbHost;
         private RadioButton rbClient;
-        private Button btnLogin;
-        private Button btnRegister;
-        private Label lblLogin;
-        private Label lblPassword;
-        private Label lblAddress;
+        private Button      btnLogin;
+        private Button      btnRegister;
+        private Label       lblUsername;
+        private Label       lblPassword;
+        private Label       lblAddress;
+        private Label       lblMode;
 
         public LoginForm()
         {
@@ -168,86 +103,66 @@ namespace tt.UI
 
         private void InitializeComponent()
         {
-            Text = "System Login";
-            Width = 450;
-            Height = 300;
-            StartPosition = FormStartPosition.CenterScreen;
+            Text            = "Testing System — Login";
+            Width           = 460;
+            Height          = 340;
+            StartPosition   = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedDialog;
-            MaximizeBox = false;
-            MinimizeBox = false;
-            txtUsername = new TextBox();
-            txtPassword = new TextBox();
-            txtServerAddress = new TextBox();
-            rbHost = new RadioButton();
-            rbClient = new RadioButton();
-            txtUsername.Location = new Point(140, 47);
-            txtPassword.Location = new Point(140, 76);
-            txtServerAddress.Location = new Point(140, 105);
-            txtPassword.UseSystemPasswordChar = true;
-            btnLogin = new Button();
-            btnRegister = new Button();
-            rbHost.Location = new Point(140, 18);
-            rbHost.Text = "Host";
-            rbClient.Location = new Point(250, 18);
-            rbClient.Text = "Client";
-            rbClient.Checked = true;
-            txtServerAddress.Width = 160;
-            txtUsername.Width = 160;
-            txtPassword.Width = 160;
-            txtServerAddress.Text = "192.168.0.6";
-            //txtServerAddress.Text = "127.0.0.1";
-            Controls.Add(txtUsername);
-            Controls.Add(txtPassword);
-            Controls.Add(txtServerAddress);
-            Controls.Add(rbHost);
-            Controls.Add(rbClient);
-            Controls.Add(btnLogin);
-            Controls.Add(btnRegister);
-            btnLogin.Click += BtnLogin_Click;
+            MaximizeBox     = false;
+            MinimizeBox     = false;
+
+            // Mode selection
+            lblMode  = new Label { Location = new Point(30, 20), Text = "Mode:", Font = new Font(Font, FontStyle.Bold), AutoSize = true };
+            rbHost   = new RadioButton { Location = new Point(150, 17), Text = "Host (start server)", Width = 160 };
+            rbClient = new RadioButton { Location = new Point(310, 17), Text = "Client",              Width = 90,  Checked = true };
+
+            // Fields
+            lblUsername      = new Label   { Location = new Point(30,  60), Text = "Username",       Font = new Font(Font, FontStyle.Bold), AutoSize = true };
+            lblPassword      = new Label   { Location = new Point(30,  92), Text = "Password",       Font = new Font(Font, FontStyle.Bold), AutoSize = true };
+            lblAddress       = new Label   { Location = new Point(30, 124), Text = "Server Address", Font = new Font(Font, FontStyle.Bold), AutoSize = true };
+
+            txtUsername      = new TextBox { Location = new Point(160,  57), Size = new Size(200, 23) };
+            txtPassword      = new TextBox { Location = new Point(160,  89), Size = new Size(200, 23), UseSystemPasswordChar = true };
+            txtServerAddress = new TextBox { Location = new Point(160, 121), Size = new Size(200, 23), Text = "127.0.0.1" };
+
+            // Buttons
+            btnLogin    = new Button { Location = new Point(160, 165), Size = new Size(200, 38), Text = "Login",    Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+            btnRegister = new Button { Location = new Point(160, 212), Size = new Size(200, 35), Text = "Register", Font = new Font("Segoe UI", 9) };
+
+            btnLogin.Click    += BtnLogin_Click;
             btnRegister.Click += BtnRegister_Click;
-            rbHost.CheckedChanged += ModeChanged;
+            rbHost.CheckedChanged  += ModeChanged;
             rbClient.CheckedChanged += ModeChanged;
             AcceptButton = btnLogin;
-            btnLogin.Location = new Point(140, 134);
-            btnLogin.Height = 35;
-            btnLogin.Width = 160;
-            btnLogin.Text = "Login";
-            btnRegister.Location = new Point(140, 175);
-            btnRegister.Height = 35;
-            btnRegister.Width = 160;
-            btnRegister.Text = "Register";
-            lblLogin = new Label();
-            lblPassword = new Label();
-            lblAddress = new Label();
-            lblLogin.Location = new Point(47, 50);
-            lblLogin.Text = "Username";
-            lblPassword.Location = new Point(47, 80);
-            lblPassword.Text = "Password";
-            lblAddress.Location = new Point(47, 110);
-            lblAddress.Text = "Server Address";
-            Controls.Add(lblLogin);
-            Controls.Add(lblPassword);
-            Controls.Add(lblAddress);
-            lblLogin.Font = new Font(lblLogin.Font, FontStyle.Bold);
-            lblPassword.Font = new Font(lblPassword.Font, FontStyle.Bold);
-            lblAddress.Font = new Font(lblAddress.Font, FontStyle.Bold);
+
+            Controls.AddRange(new Control[]
+            {
+                lblMode, rbHost, rbClient,
+                lblUsername, lblPassword, lblAddress,
+                txtUsername, txtPassword, txtServerAddress,
+                btnLogin, btnRegister
+            });
+
             ModeChanged(this, EventArgs.Empty);
         }
 
         private void ModeChanged(object? sender, EventArgs e)
         {
             txtServerAddress.Enabled = rbClient.Checked;
+            if (rbHost.Checked)
+                txtServerAddress.Text = "127.0.0.1 (auto)";
         }
+
+        //Connection
 
         private async Task<bool> EnsureConnected()
         {
-            if (_serviceContainer != null)
-                return true;
+            if (_serviceContainer != null) return true;
 
             try
             {
                 const int port = 9000;
-                var address = rbHost.Checked ? "127.0.0.1" : txtServerAddress.Text.Trim();
+                string address = rbHost.Checked ? "127.0.0.1" : txtServerAddress.Text.Trim();
 
                 if (string.IsNullOrWhiteSpace(address))
                 {
@@ -258,7 +173,7 @@ namespace tt.UI
                 if (rbHost.Checked)
                     EmbeddedServerHost.EnsureStarted(port);
 
-                await Task.Delay(500);
+                await Task.Delay(600); // give server a moment to start
 
                 _serviceContainer = await NetworkServiceContainer.CreateAsync(address, port);
                 return true;
@@ -270,49 +185,48 @@ namespace tt.UI
             }
         }
 
+        //Login
+
         private async void BtnLogin_Click(object sender, EventArgs e)
         {
             string username = txtUsername.Text.Trim();
             string password = txtPassword.Text;
 
-            if (string.IsNullOrEmpty(username))
-            {
-                ShowError("Enter username");
-                return;
-            }
-
-            if (string.IsNullOrEmpty(password))
-            {
-                ShowError("Enter password");
-                return;
-            }
-            if (!await EnsureConnected())
-            {
-                return;
-            }
+            if (string.IsNullOrEmpty(username)) { ShowError("Enter username"); return; }
+            if (string.IsNullOrEmpty(password)) { ShowError("Enter password"); return; }
+            if (!await EnsureConnected()) return;
 
             ToggleControls(false);
             Cursor = Cursors.WaitCursor;
 
             try
             {
-                var user = await _serviceContainer.AuthenticationService
-                    .LoginAsync(username, password);
+                var user = await _serviceContainer!.AuthenticationService.LoginAsync(username, password);
 
                 if (user == null)
                 {
-                    ShowError("Wrong input, try again");
+                    ShowError("Invalid username or password.");
                     return;
                 }
 
-                var selectionForm = new TestSelectionForm(user, _serviceContainer!);
-                this.Hide();
-                selectionForm.ShowDialog();
-                this.Close();
+                Hide();
+
+                if (rbHost.Checked)
+                {
+                    var editorForm = new HostEditorForm(_serviceContainer!);
+                    editorForm.ShowDialog();
+                }
+                else
+                {
+                    var selectionForm = new TestSelectionForm(user, _serviceContainer!);
+                    selectionForm.ShowDialog();
+                }
+
+                Close();
             }
             catch (Exception ex)
             {
-                ShowError($"Unknown error. Try again {ex}");
+                ShowError($"Unexpected error: {ex.Message}");
             }
             finally
             {
@@ -321,15 +235,11 @@ namespace tt.UI
             }
         }
 
-        private void ShowError(string message)
-        {
-            MessageBox.Show($"{message}", "Error");
-        }
+        //Register
 
         private async void BtnRegister_Click(object sender, EventArgs e)
         {
-            if (!await EnsureConnected())
-                return;
+            if (!await EnsureConnected()) return;
 
             try
             {
@@ -346,28 +256,29 @@ namespace tt.UI
             }
         }
 
+        private void ShowError(string message) =>
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
         private void ToggleControls(bool enabled)
         {
-            txtUsername.Enabled = enabled;
-            txtPassword.Enabled = enabled;
-            btnLogin.Enabled = enabled;
-            btnRegister.Enabled = enabled;
+            txtUsername.Enabled    = enabled;
+            txtPassword.Enabled    = enabled;
+            btnLogin.Enabled       = enabled;
+            btnRegister.Enabled    = enabled;
         }
+
+        //server launcher
 
         private static class EmbeddedServerHost
         {
-            private static readonly object Sync = new object();
+            private static readonly object _lock = new();
             private static bool _started;
 
             public static void EnsureStarted(int port)
             {
-                lock (Sync)
+                lock (_lock)
                 {
-                    if (_started)
-                    {
-                        return;
-                    }
-
+                    if (_started) return;
                     var server = new TcpServer(port);
                     _ = Task.Run(() => server.StartAsync());
                     _started = true;
@@ -376,4 +287,3 @@ namespace tt.UI
         }
     }
 }
-
