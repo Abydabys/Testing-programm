@@ -1,27 +1,22 @@
 namespace tt.Shared
 {
-    /// <summary>
-    /// Defines every type of request the client can send to the server
-    /// and every type of response the server sends back.
-    /// One enum is used for both directions — the server always echoes
-    /// the same MessageType back so the client knows which reply it received.
-    /// </summary>
     public enum MessageType
     {
-        // ── Authentication ────────────────────────────────────────────────
+        // Authentication
         Login,
         Register,
         ValidateUser,
 
-        // ── Tests ─────────────────────────────────────────────────────────
+        // Tests
         GetTestById,
         GetAllPublishedTests,
+        GetAllTests,          // Host only: returns published + draft
         CreateTest,
         UpdateTest,
         PublishTest,
         DeleteTest,
 
-        // ── Questions ─────────────────────────────────────────────────────
+        // Questions
         GetQuestionById,
         GetQuestionsByTestId,
         CreateQuestion,
@@ -29,7 +24,7 @@ namespace tt.Shared
         DeleteQuestion,
         UploadQuestionImage,
 
-        // ── Test Attempts ─────────────────────────────────────────────────
+        // Test Attempts
         StartTest,
         GetTestAttemptById,
         GetUserTestAttempts,
@@ -39,7 +34,7 @@ namespace tt.Shared
         CompleteTest,
         CanUserAttemptTest,
 
-        // ── System ────────────────────────────────────────────────────────
+        // System
         Error,
         Ping,
         Disconnect
