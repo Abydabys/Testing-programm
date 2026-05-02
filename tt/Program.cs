@@ -10,8 +10,6 @@ namespace tt
         {
             ApplicationConfiguration.Initialize();
             
-            var serviceContainer = new NetworkServiceContainer();
-            
             Application.Run(new LoginForm());
         }
     }

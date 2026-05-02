@@ -10,13 +10,11 @@ namespace tt.Server
     {
         private readonly int _port;
         private TcpListener _listener;
-        private readonly TestingDbContext _dbContext;
         private bool _isRunning;
 
         public TcpServer(int port)
         {
             _port = port;
-            _dbContext = new TestingDbContext();
             _isRunning = false;
         }
 
@@ -34,8 +32,9 @@ namespace tt.Server
                 {
                     var client = await _listener.AcceptTcpClientAsync();
                     Console.WriteLine($"Client connected: {client.Client.RemoteEndPoint}");
+                    var dbContext = new TestingDbContext(); 
 
-                    var handler = new ClientHandler(client, _dbContext);
+                    var handler = new ClientHandler(client, dbContext);
 
                     _ = Task.Run(async () =>
                     {
@@ -47,11 +46,14 @@ namespace tt.Server
                         {
                             Console.WriteLine($"Client handler error: {ex.Message}");
                         }
+                        finally
+                        {
+                            dbContext.Dispose();
+                        }
                     });
                 }
                 catch (ObjectDisposedException)
                 {
-                    // Listener was stopped → exit loop
                     break;
                 }
                 catch (Exception ex)

@@ -10,7 +10,7 @@ namespace tt.Shared
         public bool Success { get; set; }
         public string ErrorMessage { get; set; }
         public NetworkMessage()
-        { 
+        {
             Payload = string.Empty;
             Success = true;
             ErrorMessage = string.Empty;
@@ -19,10 +19,15 @@ namespace tt.Shared
         public NetworkMessage(MessageType type, object payloadObject)
         {
             Type = type;
-            Payload = JsonSerializer.Serialize(payloadObject);
+            var options = new JsonSerializerOptions
+            {
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+            };
+            Payload = JsonSerializer.Serialize(payloadObject, options);
             Success = true;
             ErrorMessage = string.Empty;
         }
+
         public static NetworkMessage CreateError(MessageType type, string errorMessage)
         {
             return new NetworkMessage
@@ -40,17 +45,21 @@ namespace tt.Shared
                 return default;
             return JsonSerializer.Deserialize<T>(Payload);
         }
+        
         public async Task WriteToStreamAsync(Stream stream)
         {
-            string json = JsonSerializer.Serialize(this);
+            var options = new JsonSerializerOptions
+            {
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+            };
+            string json = JsonSerializer.Serialize(this, options);
             byte[] bodyBytes = Encoding.UTF8.GetBytes(json);
             byte[] lengthBytes = BitConverter.GetBytes(bodyBytes.Length);
             if (BitConverter.IsLittleEndian)
                 Array.Reverse(lengthBytes);
             await stream.WriteAsync(lengthBytes, 0, 4);
             await stream.WriteAsync(bodyBytes, 0, bodyBytes.Length);
-            await stream.FlushAsync();          
-            throw new NotImplementedException();
+            await stream.FlushAsync();
         }
         public static async Task<NetworkMessage> ReadFromStreamAsync(Stream stream)
         {
@@ -67,7 +76,6 @@ namespace tt.Shared
                 return null;
             string json = Encoding.UTF8.GetString(bodyBuffer);
             return JsonSerializer.Deserialize<NetworkMessage>(json);
-            throw new NotImplementedException();
         }
         private static async Task<bool> ReadExactAsync(Stream stream, byte[] buffer)
         {
@@ -87,7 +95,6 @@ namespace tt.Shared
 
             }
             return true;
-            throw new NotImplementedException();
         }
     }
 }

@@ -16,9 +16,8 @@ namespace tt.Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                // Ideally move this to appsettings.json or environment variables
                 optionsBuilder.UseNpgsql(
-                    "Host=localhost;Port=5434;Database=testing_db;Username=postgres;Password=1234");
+                    "Host=localhost;Port=5432;Database=testing_db;Username=postgres;Password=123456");
             }
         }
 
