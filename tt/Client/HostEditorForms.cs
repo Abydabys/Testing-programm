@@ -3,10 +3,6 @@ using tt.Models;
 
 namespace tt.UI
 {
-    // ═══════════════════════════════════════════════════════════════
-    //  HOST EDITOR FORM  — main window for the host
-    // ═══════════════════════════════════════════════════════════════
-
     public class HostEditorForm : Form
     {
         private readonly NetworkServiceContainer _svc;
@@ -33,7 +29,6 @@ namespace tt.UI
             ClientSize    = new Size(1000, 640);
             StartPosition = FormStartPosition.CenterScreen;
 
-            // ── Header ────────────────────────────────────────────
             var header = new Panel { Dock = DockStyle.Top, Height = 60, BackColor = Color.FromArgb(30, 80, 160) };
             lblTitle   = new Label
             {
@@ -45,7 +40,6 @@ namespace tt.UI
             };
             header.Controls.Add(lblTitle);
 
-            // ── Grid ──────────────────────────────────────────────
             dgvTests = new DataGridView
             {
                 Location              = new Point(20, 80),
@@ -60,7 +54,6 @@ namespace tt.UI
                 BackgroundColor       = Color.White
             };
 
-            // ── Toolbar ───────────────────────────────────────────
             int bx = 20, by = 540, bw = 148, bh = 42, gap = 10;
 
             btnNewTest          = MakeButton("➕  New Test",         Color.FromArgb(40, 160, 80),  new Point(bx,                    by), new Size(bw, bh));
@@ -89,8 +82,6 @@ namespace tt.UI
 
             Load += async (_, __) => await LoadTests();
         }
-
-        // ── Helpers ───────────────────────────────────────────────
 
         private static Button MakeButton(string text, Color back, Point loc, Size size)
         {
@@ -140,7 +131,6 @@ namespace tt.UI
                 return null;
             }
             int id = (int)dgvTests.SelectedRows[0].Cells["Id"].Value;
-            // Return a lightweight proxy (we'll fetch full if needed)
             return new Test
             {
                 Id          = id,
@@ -149,8 +139,6 @@ namespace tt.UI
                 IsPublished = dgvTests.SelectedRows[0].Cells["Status"].Value?.ToString()?.StartsWith("✅") ?? false
             };
         }
-
-        // ── Event handlers ────────────────────────────────────────
 
         private async void BtnNewTest_Click(object sender, EventArgs e)
         {
@@ -174,7 +162,6 @@ namespace tt.UI
 
             try
             {
-                // Fetch full object so description & maxAttempts are populated
                 var full = await _svc.TestEditorService.GetTestByIdAsync(stub.Id);
                 if (full == null) { MessageBox.Show("Test not found."); return; }
 
@@ -244,10 +231,6 @@ namespace tt.UI
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    //  TEST EDIT DIALOG  — create or edit a test's metadata
-    // ═══════════════════════════════════════════════════════════════
-
     public class TestEditDialog : Form
     {
         private TextBox        txtTitle;
@@ -256,7 +239,6 @@ namespace tt.UI
         private Button         btnOK;
         private Button         btnCancel;
 
-        /// <summary>The test to save — populated when user clicks OK.</summary>
         public Test ResultTest { get; private set; } = new Test();
 
         private readonly Test? _existing;
@@ -348,10 +330,6 @@ namespace tt.UI
             Close();
         }
     }
-
-    // ═══════════════════════════════════════════════════════════════
-    //  QUESTION MANAGER FORM  — list questions for a test, CRUD
-    // ═══════════════════════════════════════════════════════════════
 
     public class QuestionManagerForm : Form
     {
@@ -474,7 +452,7 @@ namespace tt.UI
         {
             if (dgvQuestions.SelectedRows.Count == 0) { MessageBox.Show("Select a question first."); return null; }
             int id = (int)dgvQuestions.SelectedRows[0].Cells["Id"].Value;
-            return new Question { Id = id }; // minimal proxy
+            return new Question { Id = id };
         }
 
         private async void BtnAddQuestion_Click(object sender, EventArgs e)
@@ -496,11 +474,6 @@ namespace tt.UI
         {
             var stub = SelectedQuestion();
             if (stub == null) return;
-
-            // We need to fetch the full question (with answers) from the server
-            // Use the grid data to find it for now — but we need the answers, so send a GetQuestionById request
-            // That means adding a helper to QuestionEditorService or using the existing one
-            // For simplicity: reload all questions and find by Id
 
             try
             {
@@ -574,7 +547,6 @@ namespace tt.UI
 
             try
             {
-                // Upload an empty byte array to clear the image
                 bool ok = await _svc.QuestionEditorService.UploadQuestionImageAsync(stub.Id, Array.Empty<byte>(), "");
                 lblStatus.Text = ok ? "Image removed." : "Failed to remove image.";
                 await LoadQuestions();
@@ -582,10 +554,6 @@ namespace tt.UI
             catch (Exception ex) { MessageBox.Show($"Error: {ex.Message}"); }
         }
     }
-
-    // ═══════════════════════════════════════════════════════════════
-    //  QUESTION EDIT DIALOG  — create / edit one question + answers
-    // ═══════════════════════════════════════════════════════════════
 
     public class QuestionEditDialog : Form
     {
@@ -619,7 +587,6 @@ namespace tt.UI
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox     = false;
 
-            // Question text
             AddLabel("Question Text:",    20, 20);
             txtQuestion = new TextBox
             {
@@ -629,7 +596,6 @@ namespace tt.UI
                 ScrollBars = ScrollBars.Vertical
             };
 
-            // Type
             AddLabel("Question Type:",    20, 110);
             cmbType = new ComboBox
             {
@@ -640,7 +606,6 @@ namespace tt.UI
             cmbType.Items.AddRange(new object[] { "Single Choice", "Multiple Choice" });
             cmbType.SelectedIndex = 0;
 
-            // Weight
             AddLabel("Weight (points):",  20, 143);
             nudWeight = new NumericUpDown
             {
@@ -651,7 +616,6 @@ namespace tt.UI
                 Value    = 1
             };
 
-            // Answers grid
             var grpAnswers = new GroupBox
             {
                 Text     = "Answer Options  (check ✔ = Correct Answer)",
@@ -695,7 +659,6 @@ namespace tt.UI
 
             grpAnswers.Controls.AddRange(new Control[] { dgvAnswers, btnAddAnswer, btnRemoveAnswer });
 
-            // OK / Cancel
             btnOK = new Button
             {
                 Text      = "Save",
@@ -740,7 +703,6 @@ namespace tt.UI
                 .Any(r => r.Cells["IsCorrect"].Value is true);
             if (!hasCorrect) { MessageBox.Show("Mark at least one answer as correct."); return; }
 
-            // Collect answers
             var answers = new List<Answer>();
             int order   = 0;
             foreach (DataGridViewRow row in dgvAnswers.Rows)

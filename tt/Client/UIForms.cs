@@ -3,8 +3,6 @@ using tt.Models;
 
 namespace tt.UI
 {
-    //  Test Selection Form
-
     public partial class TestSelectionForm : Form
     {
         private readonly NetworkServiceContainer _serviceContainer;
@@ -114,8 +112,6 @@ namespace tt.UI
             }
         }
     }
-
-    //  Testing Form
 
     public partial class TestingForm : Form
     {
@@ -309,8 +305,6 @@ namespace tt.UI
         }
     }
 
-    //  Results Form
-
     public partial class ResultsForm : Form
     {
         private readonly Models.TestAttempt _attempt;
@@ -399,8 +393,6 @@ namespace tt.UI
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
-            //Buttons 
-
             var btnAnotherTest = new Button
             {
                 Text      = "Take Another Test",
@@ -414,7 +406,7 @@ namespace tt.UI
             btnAnotherTest.FlatAppearance.BorderSize = 0;
             btnAnotherTest.Click += (_, __) =>
             {
-                DialogResult = DialogResult.Retry;   // TestingForm checks this
+                DialogResult = DialogResult.Retry;
                 Close();
             };
 

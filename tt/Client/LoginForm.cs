@@ -3,7 +3,6 @@ using tt.Server;
 
 namespace tt.UI
 {
-    //  Registration Form
     public class RegistrationForm : Form
     {
         private readonly NetworkServiceContainer _serviceContainer;
@@ -78,8 +77,6 @@ namespace tt.UI
         private void ShowError(string msg) => MessageBox.Show(msg, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 
-    //  Login Form
-
     public partial class LoginForm : Form
     {
         private NetworkServiceContainer? _serviceContainer;
@@ -111,12 +108,10 @@ namespace tt.UI
             MaximizeBox     = false;
             MinimizeBox     = false;
 
-            // Mode selection
             lblMode  = new Label { Location = new Point(30, 20), Text = "Mode:", Font = new Font(Font, FontStyle.Bold), AutoSize = true };
             rbHost   = new RadioButton { Location = new Point(150, 17), Text = "Host (start server)", Width = 160 };
             rbClient = new RadioButton { Location = new Point(310, 17), Text = "Client",              Width = 90,  Checked = true };
 
-            // Fields
             lblUsername      = new Label   { Location = new Point(30,  60), Text = "Username",       Font = new Font(Font, FontStyle.Bold), AutoSize = true };
             lblPassword      = new Label   { Location = new Point(30,  92), Text = "Password",       Font = new Font(Font, FontStyle.Bold), AutoSize = true };
             lblAddress       = new Label   { Location = new Point(30, 124), Text = "Server Address", Font = new Font(Font, FontStyle.Bold), AutoSize = true };
@@ -125,7 +120,6 @@ namespace tt.UI
             txtPassword      = new TextBox { Location = new Point(160,  89), Size = new Size(200, 23), UseSystemPasswordChar = true };
             txtServerAddress = new TextBox { Location = new Point(160, 121), Size = new Size(200, 23), Text = "127.0.0.1" };
 
-            // Buttons
             btnLogin    = new Button { Location = new Point(160, 165), Size = new Size(200, 38), Text = "Login",    Font = new Font("Segoe UI", 10, FontStyle.Bold) };
             btnRegister = new Button { Location = new Point(160, 212), Size = new Size(200, 35), Text = "Register", Font = new Font("Segoe UI", 9) };
 
@@ -153,8 +147,6 @@ namespace tt.UI
                 txtServerAddress.Text = "127.0.0.1 (auto)";
         }
 
-        //Connection
-
         private async Task<bool> EnsureConnected()
         {
             if (_serviceContainer != null) return true;
@@ -173,7 +165,7 @@ namespace tt.UI
                 if (rbHost.Checked)
                     EmbeddedServerHost.EnsureStarted(port);
 
-                await Task.Delay(600); // give server a moment to start
+                await Task.Delay(600);
 
                 _serviceContainer = await NetworkServiceContainer.CreateAsync(address, port);
                 return true;
@@ -184,8 +176,6 @@ namespace tt.UI
                 return false;
             }
         }
-
-        //Login
 
         private async void BtnLogin_Click(object sender, EventArgs e)
         {
@@ -235,8 +225,6 @@ namespace tt.UI
             }
         }
 
-        //Register
-
         private async void BtnRegister_Click(object sender, EventArgs e)
         {
             if (!await EnsureConnected()) return;
@@ -266,8 +254,6 @@ namespace tt.UI
             btnLogin.Enabled       = enabled;
             btnRegister.Enabled    = enabled;
         }
-
-        //server launcher
 
         private static class EmbeddedServerHost
         {
