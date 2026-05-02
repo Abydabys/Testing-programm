@@ -30,26 +30,27 @@ namespace tt.UI
             // 
             // dataGridView
             // 
-            dataGridView.Location = new Point(251, 153);
+            dataGridView.Location = new Point(20, 60);
             dataGridView.Name = "dataGridView";
-            dataGridView.Size = new Size(240, 150);
+            dataGridView.Size = new Size(745, 350);
             dataGridView.TabIndex = 0;
             // 
             // btnStartTest
             // 
-            btnStartTest.Location = new Point(300, 400);
+            btnStartTest.Location = new Point(300, 450);
             btnStartTest.Name = "btnStartTest";
-            btnStartTest.Size = new Size(75, 23);
+            btnStartTest.Size = new Size(160, 35);
             btnStartTest.TabIndex = 0;
             btnStartTest.Click += BtnStartTest_Click;
             btnStartTest.Text = "Start Test";
             // 
             // lblWelcome
             // 
-            lblWelcome.Location = new Point(300, 50);
+            lblWelcome.AutoSize = true;
+            lblWelcome.Location = new Point(20, 15);
             lblWelcome.Name = "lblWelcome";
-            lblWelcome.Size = new Size(100, 23);
             lblWelcome.TabIndex = 0;
+            lblWelcome.Font = new Font("Segoe UI", 18, FontStyle.Bold);
             // 
             // TestSelectionForm
             // 
@@ -95,8 +96,6 @@ namespace tt.UI
                 bool canAttempt = await _serviceContainer.TestAttemptService
                     .CanUserAttemptTestAsync(_currentUser.Id, testId);
 
-                MessageBox.Show($"CanAttempt: {canAttempt}, UserId: {_currentUser.Id}, TestId: {testId}");
-
                 if (!canAttempt)
                 {
                     MessageBox.Show("You have used all available attempts.");
@@ -105,8 +104,6 @@ namespace tt.UI
 
                 var attempt = await _serviceContainer.TestAttemptService
                     .StartTestAsync(_currentUser.Id, testId);
-
-                MessageBox.Show($"Attempt: {(attempt == null ? "NULL" : attempt.Id.ToString())}");
 
                 if (attempt == null)
                 {
@@ -234,7 +231,6 @@ namespace tt.UI
                     .QuestionService
                     .GetQuestionsByTestIdAsync(_testAttempt.TestId);
                 _questions = questions.ToList();
-                MessageBox.Show($"Loaded {_questions.Count} questions, TestId: {_testAttempt.TestId}");
                 DisplayQuestion(0);
             }
             catch (Exception ex)

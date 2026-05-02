@@ -11,6 +11,9 @@ namespace tt.UI
         private TextBox txtPassword;
         private TextBox txtFullName;
         private Button btnRegister;
+        private Label lblUsername;
+        private Label lblPassword;
+        private Label lblFullname;
 
         public string RegisteredUsername { get; private set; }
 
@@ -26,20 +29,23 @@ namespace tt.UI
             txtPassword = new TextBox();
             txtFullName = new TextBox();
             btnRegister = new Button();
+            lblUsername = new Label();
+            lblPassword = new Label();
+            lblFullname = new Label();
             SuspendLayout();
             // 
             // txtUsername
             // 
             txtUsername.Location = new Point(142, 47);
             txtUsername.Name = "txtUsername";
-            txtUsername.Size = new Size(100, 23);
+            txtUsername.Size = new Size(160, 23);
             txtUsername.TabIndex = 0;
             // 
             // txtPassword
             // 
             txtPassword.Location = new Point(142, 76);
             txtPassword.Name = "txtPassword";
-            txtPassword.Size = new Size(100, 23);
+            txtPassword.Size = new Size(160, 23);
             txtPassword.TabIndex = 1;
             txtPassword.UseSystemPasswordChar = true;
             // 
@@ -47,17 +53,32 @@ namespace tt.UI
             // 
             txtFullName.Location = new Point(142, 105);
             txtFullName.Name = "txtFullName";
-            txtFullName.Size = new Size(100, 23);
+            txtFullName.Size = new Size(160, 23);
             txtFullName.TabIndex = 2;
             // 
             // btnRegister
             // 
             btnRegister.Location = new Point(142, 134);
             btnRegister.Name = "btnRegister";
-            btnRegister.Size = new Size(100, 23);
+            btnRegister.Size = new Size(160, 35);
             btnRegister.TabIndex = 3;
             btnRegister.Click += BtnRegister_Click;
-            btnRegister.Text = "Зарегистрироваться";
+            btnRegister.Text = "Register";
+            //
+            //Labels
+            //
+            lblUsername.Location = new Point(47, 50);
+            lblUsername.Text = "Username";
+            lblPassword.Location = new Point(47, 80);
+            lblPassword.Text = "Password";
+            lblFullname.Location = new Point(47, 110);
+            lblFullname.Text = "Full Name";
+            lblUsername.Font = new Font(lblUsername.Font, FontStyle.Bold);
+            lblPassword.Font = new Font(lblPassword.Font, FontStyle.Bold);
+            lblFullname.Font = new Font(lblFullname.Font, FontStyle.Bold);
+            Controls.Add(lblUsername);
+            Controls.Add(lblPassword);
+            Controls.Add(lblFullname);
             // 
             // RegistrationForm
             // 
@@ -81,19 +102,19 @@ namespace tt.UI
 
             if (string.IsNullOrEmpty(username))
             {
-                ShowError("Введите имя пользователя");
+                ShowError("Enter username");
                 return;
             }
 
             if (string.IsNullOrEmpty(password))
             {
-                ShowError("Введите пароль");
+                ShowError("Enter password");
                 return;
             }
 
             if (string.IsNullOrEmpty(fullName))
             {
-                ShowError("Введите полное имя");
+                ShowError("Enter fullname");
                 return;
             }
 
@@ -105,7 +126,7 @@ namespace tt.UI
 
                 if (!success)
                 {
-                    ShowError("Регистрация неуспешна.");
+                    ShowError("Registration failed.");
                     return;
                 }
 
@@ -115,13 +136,13 @@ namespace tt.UI
             }
             catch (Exception ex)
             {
-                ShowError($"Ошибка при регистрации {ex}");
+                ShowError($"Error while registration {ex}");
             }
         }
 
         private void ShowError(string msg)
         {
-            MessageBox.Show($"{msg}", "Ошибка");
+            MessageBox.Show($"{msg}", "Error");
         }
     }
 
@@ -136,6 +157,9 @@ namespace tt.UI
         private RadioButton rbClient;
         private Button btnLogin;
         private Button btnRegister;
+        private Label lblLogin;
+        private Label lblPassword;
+        private Label lblAddress;
 
         public LoginForm()
         {
@@ -158,16 +182,18 @@ namespace tt.UI
             rbClient = new RadioButton();
             txtUsername.Location = new Point(140, 47);
             txtPassword.Location = new Point(140, 76);
-            txtServerAddress.Location = new Point(140, 134);
+            txtServerAddress.Location = new Point(140, 105);
             txtPassword.UseSystemPasswordChar = true;
             btnLogin = new Button();
             btnRegister = new Button();
             rbHost.Location = new Point(140, 18);
             rbHost.Text = "Host";
-            rbClient.Location = new Point(270, 18);
+            rbClient.Location = new Point(250, 18);
             rbClient.Text = "Client";
             rbClient.Checked = true;
-            txtServerAddress.Width = 130;
+            txtServerAddress.Width = 160;
+            txtUsername.Width = 160;
+            txtPassword.Width = 160;
             txtServerAddress.Text = "192.168.0.6";
             //txtServerAddress.Text = "127.0.0.1";
             Controls.Add(txtUsername);
@@ -182,17 +208,29 @@ namespace tt.UI
             rbHost.CheckedChanged += ModeChanged;
             rbClient.CheckedChanged += ModeChanged;
             AcceptButton = btnLogin;
-            btnLogin.Location = new Point(140, 105);
-            btnLogin.Height = 23;
-            btnLogin.Width = 100;
-            btnLogin.Text = "Логин";
-            btnRegister.Location = new Point(140, 134);
-            btnRegister.Height = 23;
-            btnRegister.Width = 100;
-            btnRegister.Text = "Регистрация";
-            btnLogin.Top = 163;
-            txtServerAddress.Top = 192;
-            btnRegister.Top = 221;
+            btnLogin.Location = new Point(140, 134);
+            btnLogin.Height = 35;
+            btnLogin.Width = 160;
+            btnLogin.Text = "Login";
+            btnRegister.Location = new Point(140, 175);
+            btnRegister.Height = 35;
+            btnRegister.Width = 160;
+            btnRegister.Text = "Register";
+            lblLogin = new Label();
+            lblPassword = new Label();
+            lblAddress = new Label();
+            lblLogin.Location = new Point(47, 50);
+            lblLogin.Text = "Username";
+            lblPassword.Location = new Point(47, 80);
+            lblPassword.Text = "Password";
+            lblAddress.Location = new Point(47, 110);
+            lblAddress.Text = "Server Address";
+            Controls.Add(lblLogin);
+            Controls.Add(lblPassword);
+            Controls.Add(lblAddress);
+            lblLogin.Font = new Font(lblLogin.Font, FontStyle.Bold);
+            lblPassword.Font = new Font(lblPassword.Font, FontStyle.Bold);
+            lblAddress.Font = new Font(lblAddress.Font, FontStyle.Bold);
             ModeChanged(this, EventArgs.Empty);
         }
 
@@ -239,13 +277,13 @@ namespace tt.UI
 
             if (string.IsNullOrEmpty(username))
             {
-                ShowError("Введите имя пользователя");
+                ShowError("Enter username");
                 return;
             }
 
             if (string.IsNullOrEmpty(password))
             {
-                ShowError("Введите пароль");
+                ShowError("Enter password");
                 return;
             }
             if (!await EnsureConnected())
@@ -263,7 +301,7 @@ namespace tt.UI
 
                 if (user == null)
                 {
-                    ShowError("Неверное имя пользователя. Попробуйте еще раз.");
+                    ShowError("Wrong input, try again");
                     return;
                 }
 
@@ -274,7 +312,7 @@ namespace tt.UI
             }
             catch (Exception ex)
             {
-                ShowError($"Произошла неизвестная ошибка. Попробуйте еще раз {ex}");
+                ShowError($"Unknown error. Try again {ex}");
             }
             finally
             {
@@ -285,7 +323,7 @@ namespace tt.UI
 
         private void ShowError(string message)
         {
-            MessageBox.Show($"{message}", "Ошибка");
+            MessageBox.Show($"{message}", "Error");
         }
 
         private async void BtnRegister_Click(object sender, EventArgs e)
