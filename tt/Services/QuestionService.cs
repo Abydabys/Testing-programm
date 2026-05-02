@@ -13,7 +13,6 @@ namespace tt.Services
             _context = context;
         }
 
-        // Получить вопрос по ID вместе с вариантами ответов
         public async Task<Question> GetQuestionByIdAsync(int id)
         {
             return await _context.Questions
@@ -21,7 +20,6 @@ namespace tt.Services
                 .FirstOrDefaultAsync(q => q.Id == id);
         }
 
-        // Получить все вопросы теста, отсортированные по Order
         public async Task<IEnumerable<Question>> GetQuestionsByTestIdAsync(int testId)
         {
             return await _context.Questions
@@ -31,7 +29,6 @@ namespace tt.Services
                 .ToListAsync();
         }
 
-        // Добавить вопрос — после сохранения question.Id будет заполнен из БД
         public async Task<bool> CreateQuestionAsync(Question question)
         {
             _context.Questions.Add(question);
@@ -39,22 +36,32 @@ namespace tt.Services
             return true;
         }
 
-        // Обновить текст и порядок вопроса
         public async Task<bool> UpdateQuestionAsync(Question question)
         {
-            var existing = await _context.Questions.FindAsync(question.Id);
+            var existing = await _context.Questions
+                .Include(q => q.Answers)
+                .FirstOrDefaultAsync(q => q.Id == question.Id);
+
             if (existing == null) return false;
 
-            existing.Text = question.Text;
-            existing.Order = question.Order;
-            existing.Type = question.Type;
-            existing.Weight = question.Weight;
+            existing.Text     = question.Text;
+            existing.Order    = question.Order;
+            existing.Type     = question.Type;
+            existing.Weight   = question.Weight;
+
+            _context.Answers.RemoveRange(existing.Answers);
+
+            foreach (var answer in question.Answers)
+            {
+                answer.Id         = 0;
+                answer.QuestionId = existing.Id;
+                _context.Answers.Add(answer);
+            }
 
             await _context.SaveChangesAsync();
             return true;
         }
 
-        // Удалить вопрос (ответы удалятся каскадом через PostgreSQL)
         public async Task<bool> DeleteQuestionAsync(int questionId)
         {
             var question = await _context.Questions.FindAsync(questionId);
@@ -65,13 +72,12 @@ namespace tt.Services
             return true;
         }
 
-        // Загрузить изображение для вопроса — сохраняем байты прямо в БД
         public async Task<bool> UploadQuestionImageAsync(int questionId, byte[] imageData, string mimeType)
         {
             var question = await _context.Questions.FindAsync(questionId);
             if (question == null) return false;
 
-            question.ImageData = imageData;
+            question.ImageData     = imageData;
             question.ImageMimeType = mimeType;
 
             await _context.SaveChangesAsync();
