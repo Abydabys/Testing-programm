@@ -4,7 +4,6 @@ using tt.Models;
 
 namespace tt.Services
 {
-    // Сервис управления пользователями — напрямую через базу данных
     public class UserService
     {
         private readonly TestingDbContext _context;
@@ -14,7 +13,6 @@ namespace tt.Services
             _context = context;
         }
 
-        // Получить всех активных пользователей
         public async Task<List<User>> GetAllUsersAsync()
         {
             return await _context.Users
@@ -22,29 +20,26 @@ namespace tt.Services
                 .ToListAsync();
         }
 
-        // Найти пользователя по ID
         public async Task<User?> GetUserByIdAsync(int userId)
         {
             return await _context.Users.FindAsync(userId);
         }
 
-        // Найти пользователя по логину
         public async Task<User?> GetUserByUsernameAsync(string username)
         {
             return await _context.Users
                 .FirstOrDefaultAsync(u => u.Username == username);
         }
 
-        // Создать нового пользователя
         public async Task<User> CreateUserAsync(string username, string password, string fullName)
         {
             var user = new User
             {
-                Username = username,
-                PasswordHash = password, // без хеширования
-                FullName = fullName,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                Username     = username,
+                PasswordHash = password,
+                FullName     = fullName,
+                IsActive     = true,
+                CreatedAt    = DateTime.UtcNow
             };
 
             _context.Users.Add(user);
@@ -52,7 +47,6 @@ namespace tt.Services
             return user;
         }
 
-        // Обновить данные пользователя
         public async Task<bool> UpdateUserAsync(User user)
         {
             var existing = await _context.Users.FindAsync(user.Id);
@@ -65,7 +59,6 @@ namespace tt.Services
             return true;
         }
 
-        // Деактивировать пользователя (мягкое удаление)
         public async Task<bool> DeleteUserAsync(int userId)
         {
             var user = await _context.Users.FindAsync(userId);
@@ -76,7 +69,6 @@ namespace tt.Services
             return true;
         }
 
-        // Проверить, занят ли логин
         public async Task<bool> UsernameExistsAsync(string username)
         {
             return await _context.Users.AnyAsync(u => u.Username == username);
